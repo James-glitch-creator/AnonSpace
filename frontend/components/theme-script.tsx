@@ -1,5 +1,3 @@
-import Script from "next/script";
-
 const THEME_INIT_SCRIPT = `
 (function () {
   try {
@@ -14,10 +12,9 @@ const THEME_INIT_SCRIPT = `
 
 export function ThemeScript() {
   return (
-    // eslint-disable-next-line @next/next/no-before-interactive-script-outside-document -- App Router root layout is the documented location for beforeInteractive scripts
-    <Script
-      id="anonspace-theme-init"
-      strategy="beforeInteractive"
+    <script
+      type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
+      suppressHydrationWarning
       dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
     />
   );

@@ -4,9 +4,10 @@ import { LogOut, MessageCircle, Rss, Search, Settings, TrendingUp } from "lucide
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { communities } from "@/lib/data";
+import { authApi } from "@/lib/api";
 
 const newsLinks = [
-  { label: "Latest Posts", href: "/", icon: Rss },
+  { label: "Latest Posts", href: "/home", icon: Rss },
   { label: "Popular Posts", href: "/popular", icon: TrendingUp },
   { label: "Search", href: "/search", icon: Search },
 ];
@@ -42,6 +43,27 @@ function NavLink({
       )}
       <span className="truncate">{label}</span>
     </Link>
+  );
+}
+
+function LogoutButton() {
+  async function handleLogout() {
+    try {
+      await authApi.logout();
+    } finally {
+      window.location.href = "/";
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleLogout}
+      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+    >
+      <LogOut className="h-4.5 w-4.5 shrink-0" />
+      <span className="truncate">Log Out</span>
+    </button>
   );
 }
 
@@ -92,7 +114,7 @@ export function Sidebar() {
             icon={Settings}
             active={pathname === "/settings"}
           />
-          <NavLink href="/login" label="Log Out" icon={LogOut} active={pathname === "/login"} />
+          <LogoutButton />
         </div>
       </div>
     </aside>

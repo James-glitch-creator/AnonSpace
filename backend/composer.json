@@ -1,0 +1,16 @@
+{
+    "name": "anonspace/backend",
+    "description": "Authentication backend for AnonSpace",
+    "type": "project",
+    "require": {
+        "php": ">=8.1",
+        "ext-mongodb": "*",
+        "mongodb/mongodb": "^2.0",
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}

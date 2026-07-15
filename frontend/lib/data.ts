@@ -73,6 +73,55 @@ export const posts: Post[] = [
   },
 ];
 
+export type Comment = {
+  id: string;
+  postId: string;
+  handle: string;
+  body: string;
+  time: string;
+  upvotes: number;
+  downvotes: number;
+};
+
+export const comments: Comment[] = [
+  {
+    id: "c1",
+    postId: "p1",
+    handle: "Anonymous #3221",
+    body: "94th percentile is wild for general-only pretraining. Curious what the human baseline was on the same exam sitting.",
+    time: "1h ago",
+    upvotes: 84,
+    downvotes: 3,
+  },
+  {
+    id: "c2",
+    postId: "p1",
+    handle: "Anonymous #6598",
+    body: "Would love to see the same benchmark run against a domain-tuned model for comparison.",
+    time: "42m ago",
+    upvotes: 31,
+    downvotes: 1,
+  },
+  {
+    id: "c3",
+    postId: "p2",
+    handle: "Anonymous #1147",
+    body: "Also worth turning on 2FA everywhere it's offered, not just rotating the password.",
+    time: "20m ago",
+    upvotes: 56,
+    downvotes: 2,
+  },
+  {
+    id: "c4",
+    postId: "p3",
+    handle: "Anonymous #4820",
+    body: "Async reviews only work if everyone actually leaves real feedback and doesn't just rubber-stamp it though.",
+    time: "2h ago",
+    upvotes: 19,
+    downvotes: 4,
+  },
+];
+
 export const chatThreads = [
   { id: "t1", handle: "Anonymous #4531", lastMessage: "did you see the r/AnonDev thread on the bar exam?", time: "2m" },
   { id: "t2", handle: "Anonymous #3221", lastMessage: "yeah, 94th percentile with general-only pretraining", time: "3h" },

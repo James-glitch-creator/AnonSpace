@@ -9,7 +9,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90">
       <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-4 px-4">
         {/* Logo */}
-        <Link href="/" className="group flex shrink-0 items-center gap-2.5">
+        <Link href="/home" className="group flex shrink-0 items-center gap-2.5">
           <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-lg shadow-cyan-500/30 ring-1 ring-white/20 transition-all duration-200 group-hover:scale-105">
             <VenetianMask className="h-5 w-5 text-slate-950" strokeWidth={2.25} />
           </span>

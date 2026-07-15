@@ -1,8 +1,10 @@
 "use client";
 
 import { ArrowBigDown, ArrowBigUp, MessageSquare, Share2, VenetianMask } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import type { Post } from "@/lib/data";
+import { ReportButton } from "./report-button";
 
 export function PostCard({ post }: { post: Post }) {
   const [vote, setVote] = useState<"up" | "down" | null>(null);
@@ -62,14 +64,20 @@ export function PostCard({ post }: { post: Post }) {
           </button>
         </div>
 
-        <button className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100">
+        <Link
+          href={`/post/${post.id}`}
+          className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+        >
           <MessageSquare className="h-4 w-4" />
           {post.comments}
-        </button>
-        <button className="ml-auto flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100">
+        </Link>
+        <button className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100">
           <Share2 className="h-4 w-4" />
           Share
         </button>
+        <div className="ml-auto">
+          <ReportButton targetType="post" targetLabel={post.body} />
+        </div>
       </div>
     </article>
   );

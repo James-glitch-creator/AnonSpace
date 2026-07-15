@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Actions;
+
+use App\Auth;
+use App\Communities;
+use App\CommunityView;
+use App\Response;
+
+final class ListCommunities
+{
+    public static function handle(): never
+    {
+        $user = Auth::requireUser();
+        $joinedIds = Communities::joinedIds($user['_id']);
+
+        $communities = Communities::collection()->find([], ['sort' => ['memberCount' => -1]])->toArray();
+
+        Response::ok([
+            'communities' => array_map(
+                fn($c) => CommunityView::render((array) $c, in_array((string) $c['_id'], $joinedIds, true)),
+                $communities
+            ),
+        ]);
+    }
+}
