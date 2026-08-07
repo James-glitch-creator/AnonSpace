@@ -18,8 +18,13 @@ final class GetCommunity
             Response::error('Community not found', 404);
         }
 
-        $isJoined = Communities::isJoined($user['_id'], $community['_id']);
+        // The community itself (name/topic/member count) is visible to anyone who finds
+        // it — including via search — even when private. Its posts stay member-only;
+        // that's enforced separately by ListCommunityPosts.
 
-        Response::ok(['community' => CommunityView::render((array) $community, $isJoined)]);
+        $isJoined = Communities::isJoined($user['_id'], $community['_id']);
+        $isOwner = Communities::isCreator($user['_id'], (array) $community);
+
+        Response::ok(['community' => CommunityView::render((array) $community, $isJoined, $isOwner)]);
     }
 }

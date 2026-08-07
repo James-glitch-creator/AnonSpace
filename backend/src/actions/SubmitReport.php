@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Auth;
+use App\Communities;
 use App\Database;
 use App\Ids;
 use App\Response;
@@ -19,13 +20,20 @@ final class SubmitReport
         'Other',
     ];
 
+    private const TARGET_LABELS = [
+        'post' => 'Post',
+        'comment' => 'Comment',
+        'community' => 'Community',
+        'user' => 'User',
+    ];
+
     public static function handle(array $body): never
     {
         $user = Auth::requireUser();
 
         $targetType = (string) ($body['targetType'] ?? '');
-        if (!in_array($targetType, ['post', 'comment'], true)) {
-            Response::error('targetType must be "post" or "comment"', 422);
+        if (!isset(self::TARGET_LABELS[$targetType])) {
+            Response::error('targetType must be "post", "comment", "community", or "user"', 422);
         }
 
         $targetId = Ids::parse((string) ($body['targetId'] ?? ''));
@@ -43,13 +51,29 @@ final class SubmitReport
             Response::error('Details must be under 1000 characters', 422);
         }
 
-        $collection = $targetType === 'post' ? Database::posts() : Database::comments();
-        if ($collection->findOne(['_id' => $targetId]) === null) {
+        $collection = match ($targetType) {
+            'post' => Database::posts(),
+            'comment' => Database::comments(),
+            'community' => Communities::collection(),
+            'user' => Database::users(),
+        };
+        $target = $collection->findOne(['_id' => $targetId]);
+        if ($target === null) {
             Response::error('Content not found', 404);
         }
 
+        $ownerId = match ($targetType) {
+            'community' => $target['creatorId'] ?? null,
+            'user' => $target['_id'],
+            default => $target['authorId'],
+        };
+        if ($ownerId !== null && (string) $ownerId === (string) $user['_id']) {
+            $self = $targetType === 'user' ? 'yourself' : "your own {$targetType}";
+            Response::error("You can't report {$self}.", 403);
+        }
+
         Database::reports()->insertOne([
-            'targetType' => $targetType === 'post' ? 'Post' : 'Comment',
+            'targetType' => self::TARGET_LABELS[$targetType],
             'targetId' => $targetId,
             'reason' => $reason,
             'details' => $details !== '' ? $details : null,

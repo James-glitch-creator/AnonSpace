@@ -18,7 +18,10 @@ function ensureCollection(MongoDatabase $db, string $name, array $validator): vo
     $existing = iterator_to_array($db->listCollectionNames(['filter' => ['name' => $name]]));
 
     if (in_array($name, $existing, true)) {
-        echo "- {$name} already exists\n";
+        // Keep the validator in sync with this script on every run, so schema changes
+        // (new optional fields, expanded enums, ...) reach databases that already exist.
+        $db->command(['collMod' => $name, 'validator' => ['$jsonSchema' => $validator]]);
+        echo "~ synced {$name} validator\n";
         return;
     }
 
@@ -56,6 +59,9 @@ ensureCollection($db, 'communities', [
     'properties' => [
         'slug' => ['bsonType' => 'string'],
         'name' => ['bsonType' => 'string'],
+        'topic' => ['bsonType' => 'string'],
+        'visibility' => ['enum' => ['public', 'private']],
+        'creatorId' => ['bsonType' => 'objectId'],
         'memberCount' => ['bsonType' => 'int'],
         'color' => ['bsonType' => 'string'],
         'createdAt' => ['bsonType' => 'date'],
@@ -73,6 +79,9 @@ ensureCollection($db, 'posts', [
         'authorId' => ['bsonType' => 'objectId'],
         'authorHandle' => ['bsonType' => 'string'],
         'body' => ['bsonType' => 'string'],
+        'mediaType' => ['enum' => ['none', 'photos', 'video']],
+        'mediaUrls' => ['bsonType' => 'array', 'items' => ['bsonType' => 'string']],
+        'videoUrl' => ['bsonType' => ['string', 'null']],
         'upvotes' => ['bsonType' => 'int'],
         'downvotes' => ['bsonType' => 'int'],
         'commentCount' => ['bsonType' => 'int'],
@@ -85,6 +94,7 @@ ensureCollection($db, 'comments', [
     'required' => ['postId', 'authorId', 'authorHandle', 'body', 'upvotes', 'downvotes', 'createdAt'],
     'properties' => [
         'postId' => ['bsonType' => 'objectId'],
+        'parentId' => ['bsonType' => ['objectId', 'null']],
         'authorId' => ['bsonType' => 'objectId'],
         'authorHandle' => ['bsonType' => 'string'],
         'body' => ['bsonType' => 'string'],
@@ -119,7 +129,7 @@ ensureCollection($db, 'reports', [
     'bsonType' => 'object',
     'required' => ['targetType', 'targetId', 'reason', 'reporterId', 'status', 'createdAt'],
     'properties' => [
-        'targetType' => ['enum' => ['Post', 'Comment']],
+        'targetType' => ['enum' => ['Post', 'Comment', 'Community', 'User']],
         'targetId' => ['bsonType' => 'objectId'],
         'reason' => ['bsonType' => 'string'],
         'reporterId' => ['bsonType' => 'objectId'],
@@ -163,6 +173,26 @@ ensureCollection($db, 'community_members', [
     ],
 ]);
 
+ensureCollection($db, 'saved_posts', [
+    'bsonType' => 'object',
+    'required' => ['userId', 'postId', 'createdAt'],
+    'properties' => [
+        'userId' => ['bsonType' => 'objectId'],
+        'postId' => ['bsonType' => 'objectId'],
+        'createdAt' => ['bsonType' => 'date'],
+    ],
+]);
+
+ensureCollection($db, 'blocked_users', [
+    'bsonType' => 'object',
+    'required' => ['blockerId', 'blockedId', 'createdAt'],
+    'properties' => [
+        'blockerId' => ['bsonType' => 'objectId'],
+        'blockedId' => ['bsonType' => 'objectId'],
+        'createdAt' => ['bsonType' => 'date'],
+    ],
+]);
+
 echo "\nIndexes:\n";
 
 Database::users()->createIndex(['email' => 1], ['unique' => true, 'name' => 'uniq_email']);
@@ -184,7 +214,8 @@ $db->selectCollection('posts')->createIndex(['authorId' => 1], ['name' => 'autho
 echo "- posts: communitySlug idx, authorId idx\n";
 
 $db->selectCollection('comments')->createIndex(['postId' => 1], ['name' => 'post_idx']);
-echo "- comments: postId idx\n";
+$db->selectCollection('comments')->createIndex(['parentId' => 1], ['name' => 'parent_idx']);
+echo "- comments: postId idx, parentId idx\n";
 
 $db->selectCollection('chat_threads')->createIndex(['participantIds' => 1], ['name' => 'participants_idx']);
 echo "- chat_threads: participantIds idx\n";
@@ -211,14 +242,27 @@ $db->selectCollection('community_members')->createIndex(
 $db->selectCollection('community_members')->createIndex(['userId' => 1], ['name' => 'user_idx']);
 echo "- community_members: unique (communityId, userId), userId idx\n";
 
+$db->selectCollection('saved_posts')->createIndex(
+    ['userId' => 1, 'postId' => 1],
+    ['unique' => true, 'name' => 'uniq_user_post']
+);
+echo "- saved_posts: unique (userId, postId)\n";
+
+$db->selectCollection('blocked_users')->createIndex(
+    ['blockerId' => 1, 'blockedId' => 1],
+    ['unique' => true, 'name' => 'uniq_blocker_blocked']
+);
+echo "- blocked_users: unique (blockerId, blockedId)\n";
+
 echo "\nSeeding communities...\n";
 
 $communities = $db->selectCollection('communities');
+// Only "public" is seeded — it's the default posting destination the submit page falls
+// back to. Do not add more placeholder communities here: this block runs every time this
+// script does (including for unrelated schema syncs), and upsert-by-slug means anything
+// listed here comes back even after being deliberately deleted.
 $seed = [
-    ['slug' => 'anondev', 'name' => 'AnonDev', 'memberCount' => 6340000, 'color' => 'bg-cyan-500'],
-    ['slug' => 'cyberprivacy', 'name' => 'CyberPrivacy', 'memberCount' => 2100000, 'color' => 'bg-fuchsia-500'],
-    ['slug' => 'design', 'name' => 'Design', 'memberCount' => 1800000, 'color' => 'bg-emerald-500'],
-    ['slug' => 'colortone', 'name' => 'ColorTone', 'memberCount' => 845000, 'color' => 'bg-amber-500'],
+    ['slug' => 'public', 'name' => 'Public', 'topic' => 'General discussion for everyone', 'visibility' => 'public', 'memberCount' => 12000000, 'color' => 'bg-slate-500'],
 ];
 
 foreach ($seed as $c) {

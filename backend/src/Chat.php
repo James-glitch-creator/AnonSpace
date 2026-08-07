@@ -33,6 +33,7 @@ final class Chat
             'id' => (string) $thread['_id'],
             'handle' => $other['handle'] ?? 'Unknown',
             'lastMessageAt' => $thread['lastMessageAt']->toDateTime()->format(DATE_ATOM),
+            'isBlocked' => $otherId !== null && Blocking::isBlocked($currentUserId, $otherId),
         ];
     }
 

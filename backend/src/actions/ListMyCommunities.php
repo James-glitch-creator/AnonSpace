@@ -21,8 +21,13 @@ final class ListMyCommunities
 
         $communities = Communities::collection()->find(['_id' => ['$in' => $communityIds]])->toArray();
 
-        Response::ok([
-            'communities' => array_map(fn($c) => CommunityView::render((array) $c, true), $communities),
-        ]);
+        $rendered = array_map(
+            fn($c) => CommunityView::render((array) $c, true, Communities::isCreator($user['_id'], (array) $c)),
+            $communities
+        );
+
+        usort($rendered, fn($a, $b) => ($b['isOwner'] <=> $a['isOwner']));
+
+        Response::ok(['communities' => $rendered]);
     }
 }

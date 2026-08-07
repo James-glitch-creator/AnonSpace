@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Auth;
+use App\Blocking;
 use App\Chat;
 use App\Ids;
 use App\Response;
@@ -22,6 +23,18 @@ final class SendChatMessage
         $thread = Chat::threads()->findOne(['_id' => $threadObjectId, 'participantIds' => $user['_id']]);
         if ($thread === null) {
             Response::error('Thread not found', 404);
+        }
+
+        $otherId = null;
+        foreach ($thread['participantIds'] as $participantId) {
+            if ((string) $participantId !== (string) $user['_id']) {
+                $otherId = $participantId;
+                break;
+            }
+        }
+
+        if ($otherId !== null && Blocking::eitherBlocked($user['_id'], $otherId)) {
+            Response::error('You cannot message this account', 403);
         }
 
         $messageBody = trim((string) ($body['body'] ?? ''));

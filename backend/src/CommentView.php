@@ -9,6 +9,8 @@ final class CommentView
         return [
             'id' => (string) $comment['_id'],
             'postId' => (string) $comment['postId'],
+            'parentId' => isset($comment['parentId']) ? (string) $comment['parentId'] : null,
+            'authorId' => (string) $comment['authorId'],
             'authorHandle' => $comment['authorHandle'],
             'body' => $comment['body'],
             'upvotes' => (int) $comment['upvotes'],

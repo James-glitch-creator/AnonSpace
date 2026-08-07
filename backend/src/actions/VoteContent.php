@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Auth;
 use App\AutoBan;
+use App\Communities;
 use App\Database;
 use App\Ids;
 use App\Response;
@@ -31,6 +32,14 @@ final class VoteContent
 
         if ($target === null) {
             Response::error('Not found', 404);
+        }
+
+        if ($targetType === 'post') {
+            Communities::ensurePostVisible((array) $target, $user['_id']);
+        }
+
+        if ((string) $target['authorId'] === (string) $user['_id']) {
+            Response::error("You can't vote on your own {$targetType}.", 403);
         }
 
         Votes::cast($user['_id'], $targetType, $targetId, $direction);

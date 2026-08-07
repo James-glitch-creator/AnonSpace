@@ -14,11 +14,18 @@ final class ListCommunities
         $user = Auth::requireUser();
         $joinedIds = Communities::joinedIds($user['_id']);
 
-        $communities = Communities::collection()->find([], ['sort' => ['memberCount' => -1]])->toArray();
+        $communities = Communities::collection()->find(
+            ['visibility' => ['$ne' => 'private']],
+            ['sort' => ['memberCount' => -1]]
+        )->toArray();
 
         Response::ok([
             'communities' => array_map(
-                fn($c) => CommunityView::render((array) $c, in_array((string) $c['_id'], $joinedIds, true)),
+                fn($c) => CommunityView::render(
+                    (array) $c,
+                    in_array((string) $c['_id'], $joinedIds, true),
+                    Communities::isCreator($user['_id'], (array) $c)
+                ),
                 $communities
             ),
         ]);

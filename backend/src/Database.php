@@ -49,6 +49,11 @@ final class Database
         return self::connection()->selectCollection('community_members');
     }
 
+    public static function savedPosts(): \MongoDB\Collection
+    {
+        return self::connection()->selectCollection('saved_posts');
+    }
+
     public static function chatThreads(): \MongoDB\Collection
     {
         return self::connection()->selectCollection('chat_threads');
@@ -67,5 +72,10 @@ final class Database
     public static function banLogs(): \MongoDB\Collection
     {
         return self::connection()->selectCollection('ban_logs');
+    }
+
+    public static function blockedUsers(): \MongoDB\Collection
+    {
+        return self::connection()->selectCollection('blocked_users');
     }
 }

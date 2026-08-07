@@ -1,14 +1,15 @@
 "use client";
 
-import { LogOut, MessageCircle, Rss, Search, Settings, TrendingUp } from "lucide-react";
+import { Bookmark, Crown, LogOut, MessageCircle, Rss, Search, Settings, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { communities } from "@/lib/data";
-import { authApi } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { authApi, communitiesApi, type Community } from "@/lib/api";
 
 const newsLinks = [
   { label: "Latest Posts", href: "/home", icon: Rss },
   { label: "Popular Posts", href: "/popular", icon: TrendingUp },
+  { label: "Saved Posts", href: "/saved", icon: Bookmark },
   { label: "Search", href: "/search", icon: Search },
 ];
 
@@ -69,6 +70,14 @@ function LogoutButton() {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [communities, setCommunities] = useState<Community[]>([]);
+
+  useEffect(() => {
+    communitiesApi
+      .mine()
+      .then(({ communities }) => setCommunities(communities))
+      .catch(() => {});
+  }, []);
 
   return (
     <aside className="hidden lg:block">
@@ -95,16 +104,31 @@ export function Sidebar() {
           <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             My Communities
           </p>
-          {communities.map((c) => (
-            <NavLink
-              key={c.slug}
-              href={`/c/${c.slug}`}
-              label={`c/${c.name}`}
-              icon={Rss}
-              dot={c.color}
-              active={pathname === `/c/${c.slug}`}
-            />
-          ))}
+          {communities.length === 0 ? (
+            <p className="px-3 text-xs text-slate-400 dark:text-slate-500">
+              Join a community to see it here.
+            </p>
+          ) : (
+            communities.map((c) => (
+              <Link
+                key={c.slug}
+                href={`/c/${c.slug}`}
+                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                  pathname === `/c/${c.slug}`
+                    ? "bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-400"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                }`}
+              >
+                <span
+                  className={`h-2.5 w-2.5 shrink-0 rounded-full ${c.color} ${
+                    c.isOwner ? "ring-2 ring-amber-400 ring-offset-1 ring-offset-white dark:ring-offset-slate-950" : ""
+                  }`}
+                />
+                <span className="min-w-0 flex-1 truncate">c/{c.name}</span>
+                {c.isOwner && <Crown className="h-3.5 w-3.5 shrink-0 text-amber-500" />}
+              </Link>
+            ))
+          )}
         </nav>
 
         <div className="space-y-1 border-t border-slate-200 pt-4 dark:border-slate-800">

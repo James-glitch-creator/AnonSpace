@@ -3,10 +3,12 @@
 namespace App\Actions;
 
 use App\Auth;
+use App\Communities;
 use App\Database;
 use App\Pagination;
 use App\PostView;
 use App\Response;
+use App\SavedPosts;
 use App\Votes;
 
 final class ListPosts
@@ -18,6 +20,11 @@ final class ListPosts
         ['limit' => $limit, 'skip' => $skip, 'page' => $page] = Pagination::fromQuery($query);
 
         $filter = ['status' => 'visible'];
+
+        $hiddenSlugs = Communities::hiddenPrivateSlugs($user['_id']);
+        if ($hiddenSlugs !== []) {
+            $filter['communitySlug'] = ['$nin' => $hiddenSlugs];
+        }
 
         if ($sort === 'top') {
             $cursor = Database::posts()->aggregate([
@@ -38,10 +45,15 @@ final class ListPosts
 
         $ids = array_map(fn($p) => $p['_id'], $posts);
         $voteMap = Votes::mapFor($user['_id'], 'post', $ids);
+        $savedMap = SavedPosts::mapFor($user['_id'], $ids);
 
         Response::ok([
             'posts' => array_map(
-                fn($p) => PostView::render((array) $p, $voteMap[(string) $p['_id']] ?? null),
+                fn($p) => PostView::render(
+                    (array) $p,
+                    $voteMap[(string) $p['_id']] ?? null,
+                    $savedMap[(string) $p['_id']] ?? false
+                ),
                 $posts
             ),
             'page' => $page,

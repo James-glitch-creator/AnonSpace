@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Auth;
 use App\CommentView;
+use App\Communities;
 use App\Database;
 use App\Ids;
 use App\Pagination;
@@ -19,6 +20,11 @@ final class ListComments
 
         if ($postObjectId === null) {
             Response::error('Invalid post id', 422);
+        }
+
+        $post = Database::posts()->findOne(['_id' => $postObjectId]);
+        if ($post !== null) {
+            Communities::ensurePostVisible((array) $post, $user['_id']);
         }
 
         ['limit' => $limit, 'skip' => $skip] = Pagination::fromQuery($query, 50, 100);

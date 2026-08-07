@@ -3,10 +3,12 @@
 namespace App\Actions;
 
 use App\Auth;
+use App\Communities;
 use App\Database;
 use App\Ids;
 use App\PostView;
 use App\Response;
+use App\SavedPosts;
 use App\Votes;
 
 final class GetPost
@@ -25,8 +27,17 @@ final class GetPost
             Response::error('Post not found', 404);
         }
 
-        $voteMap = Votes::mapFor($user['_id'], 'post', [$postId]);
+        Communities::ensurePostVisible((array) $post, $user['_id']);
 
-        Response::ok(['post' => PostView::render((array) $post, $voteMap[(string) $postId] ?? null)]);
+        $voteMap = Votes::mapFor($user['_id'], 'post', [$postId]);
+        $savedMap = SavedPosts::mapFor($user['_id'], [$postId]);
+
+        Response::ok([
+            'post' => PostView::render(
+                (array) $post,
+                $voteMap[(string) $postId] ?? null,
+                $savedMap[(string) $postId] ?? false
+            ),
+        ]);
     }
 }

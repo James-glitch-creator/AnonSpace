@@ -4,6 +4,7 @@ frontend/.next/
 
 # PHP/Composer
 backend/vendor/
+backend/uploads/
 
 # Environment variables
 .env
