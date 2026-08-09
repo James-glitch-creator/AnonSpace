@@ -38,8 +38,11 @@ export function ReportButton({
     setError(null);
   }
 
+  const needsDetails = reason === "Other";
+
   async function submit() {
     if (!reason || isSubmitting) return;
+    if (needsDetails && details.trim() === "") return;
     setIsSubmitting(true);
     setError(null);
     try {
@@ -146,10 +149,15 @@ export function ReportButton({
             <textarea
               value={details}
               onChange={(e) => setDetails(e.target.value)}
-              placeholder="Add any extra context (optional)"
+              placeholder={needsDetails ? "Describe the reason for this report..." : "Add any extra context (optional)"}
               rows={2}
               className="mt-3 w-full resize-none rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500"
             />
+            {needsDetails && (
+              <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
+                Required when reporting for another reason.
+              </p>
+            )}
 
             <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
               Reports go to human moderators for a legality review only — this does not remove the
@@ -168,7 +176,7 @@ export function ReportButton({
               </button>
               <button
                 type="button"
-                disabled={!reason || isSubmitting}
+                disabled={!reason || isSubmitting || (needsDetails && details.trim() === "")}
                 onClick={submit}
                 className="flex-1 rounded-full bg-rose-500 py-2 text-xs font-semibold text-white transition-all duration-200 hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-40"
               >

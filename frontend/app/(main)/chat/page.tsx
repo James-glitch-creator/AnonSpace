@@ -16,12 +16,18 @@ function UserRow({
   handle,
   isBlocked,
   timestamp,
+  lastMessage,
+  lastMessageSentByMe,
+  isUnread,
   onMessage,
   onToggleBlock,
 }: {
   handle: string;
   isBlocked: boolean;
   timestamp?: string;
+  lastMessage?: string | null;
+  lastMessageSentByMe?: boolean;
+  isUnread?: boolean;
   onMessage: () => void;
   onToggleBlock: () => void;
 }) {
@@ -32,14 +38,38 @@ function UserRow({
         onClick={onMessage}
         className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-2 py-1.5 text-left"
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+        <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
           <VenetianMask className="h-4.5 w-4.5 text-slate-500 dark:text-slate-400" />
+          {isUnread && (
+            <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-cyan-500 ring-2 ring-white dark:ring-slate-900" />
+          )}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium text-slate-700 dark:text-slate-200">
+          <span
+            className={`block truncate text-sm ${
+              isUnread
+                ? "font-bold text-slate-900 dark:text-white"
+                : "font-medium text-slate-700 dark:text-slate-200"
+            }`}
+          >
             {handle}
           </span>
-          {isBlocked && <span className="text-[11px] font-medium text-rose-500">Blocked</span>}
+          {isBlocked ? (
+            <span className="text-[11px] font-medium text-rose-500">Blocked</span>
+          ) : (
+            lastMessage && (
+              <span
+                className={`block truncate text-xs ${
+                  isUnread
+                    ? "font-semibold text-slate-600 dark:text-slate-300"
+                    : "text-slate-400 dark:text-slate-500"
+                }`}
+              >
+                {lastMessageSentByMe ? "You: " : ""}
+                {lastMessage}
+              </span>
+            )
+          )}
         </span>
         {timestamp && (
           <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">
@@ -95,6 +125,9 @@ export default function ChatPage() {
   }, [query]);
 
   async function toggleBlock(handle: string, isBlocked: boolean) {
+    if (!isBlocked && !window.confirm(`Block ${handle}? You won't be able to message each other until you unblock them.`)) {
+      return;
+    }
     setError(null);
     try {
       if (isBlocked) {
@@ -174,6 +207,9 @@ export default function ChatPage() {
                   handle={t.handle}
                   isBlocked={t.isBlocked}
                   timestamp={t.lastMessageAt}
+                  lastMessage={t.lastMessageBody}
+                  lastMessageSentByMe={t.lastMessageSentByMe}
+                  isUnread={t.isUnread}
                   onMessage={() => openChatWith(t.handle)}
                   onToggleBlock={() => toggleBlock(t.handle, t.isBlocked)}
                 />

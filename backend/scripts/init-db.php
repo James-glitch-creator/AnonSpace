@@ -111,6 +111,11 @@ ensureCollection($db, 'chat_threads', [
         'participantIds' => ['bsonType' => 'array', 'items' => ['bsonType' => 'objectId']],
         'createdAt' => ['bsonType' => 'date'],
         'lastMessageAt' => ['bsonType' => 'date'],
+        'lastMessageBody' => ['bsonType' => 'string'],
+        'lastMessageSenderId' => ['bsonType' => 'objectId'],
+        // Keyed by participant userId (string) -> the date they last read this thread.
+        // Dynamic keys, so left unstructured here rather than listed per-property.
+        'lastReadAt' => ['bsonType' => 'object'],
     ],
 ]);
 
@@ -121,6 +126,8 @@ ensureCollection($db, 'chat_messages', [
         'threadId' => ['bsonType' => 'objectId'],
         'senderId' => ['bsonType' => 'objectId'],
         'body' => ['bsonType' => 'string'],
+        'mediaType' => ['enum' => ['none', 'photo', 'video']],
+        'mediaUrl' => ['bsonType' => ['string', 'null']],
         'createdAt' => ['bsonType' => 'date'],
     ],
 ]);

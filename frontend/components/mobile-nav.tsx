@@ -3,6 +3,10 @@
 import { MessageCircle, Rss, Search, Settings, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { chatApi } from "@/lib/api";
+
+const UNREAD_POLL_INTERVAL_MS = 15000;
 
 const links = [
   { label: "Latest", href: "/home", icon: Rss },
@@ -14,6 +18,20 @@ const links = [
 
 export function MobileNav() {
   const pathname = usePathname();
+  const [hasUnreadChat, setHasUnreadChat] = useState(false);
+
+  useEffect(() => {
+    function checkUnread() {
+      chatApi
+        .hasUnread()
+        .then(({ hasUnread }) => setHasUnreadChat(hasUnread))
+        .catch(() => {});
+    }
+
+    checkUnread();
+    const interval = setInterval(checkUnread, UNREAD_POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-around border-t border-slate-200 bg-white/95 py-2 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 lg:hidden">
@@ -29,7 +47,12 @@ export function MobileNav() {
                 : "text-slate-400 hover:text-cyan-600 dark:text-slate-500 dark:hover:text-cyan-400"
             }`}
           >
-            <Icon className="h-5 w-5" strokeWidth={2} />
+            <span className="relative">
+              <Icon className="h-5 w-5" strokeWidth={2} />
+              {href === "/chat" && hasUnreadChat && (
+                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-cyan-500 ring-2 ring-white dark:ring-slate-950" />
+              )}
+            </span>
             {label}
           </Link>
         );

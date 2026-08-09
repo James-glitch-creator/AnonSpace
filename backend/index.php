@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\BlockUser;
+use App\Actions\ChatUnreadStatus;
 use App\Actions\CompleteSignup;
 use App\Actions\CreateComment;
 use App\Actions\CreateCommunity;
@@ -25,6 +26,7 @@ use App\Actions\ListPosts;
 use App\Actions\ListSavedPosts;
 use App\Actions\Login;
 use App\Actions\Logout;
+use App\Actions\MarkChatThreadRead;
 use App\Actions\Me;
 use App\Actions\RequestSignupOtp;
 use App\Actions\Search;
@@ -130,10 +132,16 @@ $router->add('POST', '/api/users/block', fn() => BlockUser::handle(jsonBody()));
 $router->add('POST', '/api/users/unblock', fn() => UnblockUser::handle(jsonBody()));
 
 // Chat
+$router->add('GET', '/api/chat/unread', fn() => ChatUnreadStatus::handle());
 $router->add('GET', '/api/chat/threads', fn() => ListChatThreads::handle());
 $router->add('POST', '/api/chat/threads', fn() => StartChatThread::handle(jsonBody()));
 $router->add('GET', '/api/chat/threads/{id}/messages', fn($p) => ListChatMessages::handle($p['id'], $_GET));
-$router->add('POST', '/api/chat/threads/{id}/messages', fn($p) => SendChatMessage::handle($p['id'], jsonBody()));
+$router->add(
+    'POST',
+    '/api/chat/threads/{id}/messages',
+    fn($p) => SendChatMessage::handle($p['id'], requestBody(), $_FILES)
+);
+$router->add('POST', '/api/chat/threads/{id}/read', fn($p) => MarkChatThreadRead::handle($p['id']));
 
 // Reports
 $router->add('POST', '/api/reports', fn() => SubmitReport::handle(jsonBody()));

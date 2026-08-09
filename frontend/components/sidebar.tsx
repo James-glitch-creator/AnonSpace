@@ -4,7 +4,9 @@ import { Bookmark, Crown, LogOut, MessageCircle, Rss, Search, Settings, Trending
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { authApi, communitiesApi, type Community } from "@/lib/api";
+import { authApi, chatApi, communitiesApi, type Community } from "@/lib/api";
+
+const UNREAD_POLL_INTERVAL_MS = 15000;
 
 const newsLinks = [
   { label: "Latest Posts", href: "/home", icon: Rss },
@@ -21,12 +23,14 @@ function NavLink({
   icon: Icon,
   active,
   dot,
+  notify,
 }: {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   active: boolean;
   dot?: string;
+  notify?: boolean;
 }) {
   return (
     <Link
@@ -40,7 +44,12 @@ function NavLink({
       {dot ? (
         <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dot}`} />
       ) : (
-        <Icon className="h-4.5 w-4.5 shrink-0" />
+        <span className="relative shrink-0">
+          <Icon className="h-4.5 w-4.5" />
+          {notify && (
+            <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-cyan-500 ring-2 ring-white dark:ring-slate-950" />
+          )}
+        </span>
       )}
       <span className="truncate">{label}</span>
     </Link>
@@ -49,6 +58,7 @@ function NavLink({
 
 function LogoutButton() {
   async function handleLogout() {
+    if (!window.confirm("Log out of AnonSpace?")) return;
     try {
       await authApi.logout();
     } finally {
@@ -71,12 +81,26 @@ function LogoutButton() {
 export function Sidebar() {
   const pathname = usePathname();
   const [communities, setCommunities] = useState<Community[]>([]);
+  const [hasUnreadChat, setHasUnreadChat] = useState(false);
 
   useEffect(() => {
     communitiesApi
       .mine()
       .then(({ communities }) => setCommunities(communities))
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    function checkUnread() {
+      chatApi
+        .hasUnread()
+        .then(({ hasUnread }) => setHasUnreadChat(hasUnread))
+        .catch(() => {});
+    }
+
+    checkUnread();
+    const interval = setInterval(checkUnread, UNREAD_POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -96,7 +120,12 @@ export function Sidebar() {
             Messaging
           </p>
           {messagingLinks.map((link) => (
-            <NavLink key={link.href} {...link} active={pathname === link.href} />
+            <NavLink
+              key={link.href}
+              {...link}
+              active={pathname === link.href}
+              notify={link.href === "/chat" && hasUnreadChat}
+            />
           ))}
         </nav>
 

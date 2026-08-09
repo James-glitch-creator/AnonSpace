@@ -275,14 +275,21 @@ export type ChatThread = {
   id: string;
   handle: string;
   lastMessageAt: string;
+  lastMessageBody: string | null;
+  lastMessageSentByMe: boolean;
   isBlocked: boolean;
+  isUnread: boolean;
 };
+
+export type ChatMediaType = "none" | "photo" | "video";
 
 export type ChatMessage = {
   id: string;
   threadId: string;
   senderId: string;
   body: string;
+  mediaType: ChatMediaType;
+  mediaUrl: string | null;
   createdAt: string;
 };
 
@@ -300,11 +307,25 @@ export const chatApi = {
       withQuery(`/api/chat/threads/${threadId}/messages`, params)
     ),
 
-  sendMessage: (threadId: string, body: string) =>
-    request<{ success: true; message: ChatMessage }>(`/api/chat/threads/${threadId}/messages`, {
-      method: "POST",
-      body: JSON.stringify({ body }),
-    }),
+  sendMessage: (threadId: string, input: { body: string; photo?: File; video?: File }) => {
+    const formData = new FormData();
+    formData.append("body", input.body);
+    if (input.photo) {
+      formData.append("photo", input.photo);
+    } else if (input.video) {
+      formData.append("video", input.video);
+    }
+
+    return requestForm<{ success: true; message: ChatMessage }>(
+      `/api/chat/threads/${threadId}/messages`,
+      formData
+    );
+  },
+
+  markRead: (threadId: string) =>
+    request<{ success: true; read: true }>(`/api/chat/threads/${threadId}/read`, { method: "POST" }),
+
+  hasUnread: () => request<{ success: true; hasUnread: boolean }>("/api/chat/unread"),
 };
 
 export type UserSearchResult = {
