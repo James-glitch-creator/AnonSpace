@@ -14,7 +14,7 @@ final class JoinCommunity
         $user = Auth::requireUser();
         $community = Communities::collection()->findOne(['slug' => $slug]);
 
-        if ($community === null) {
+        if ($community === null || ($community['status'] ?? 'active') === 'banned') {
             Response::error('Community not found', 404);
         }
 

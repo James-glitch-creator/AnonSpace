@@ -27,4 +27,23 @@ final class Blocking
 
         return array_map(fn($r) => (string) $r['blockedId'], $rows);
     }
+
+    /** @return array<int, array{id: string, handle: string}> most recently blocked first */
+    public static function listBlocked(ObjectId $blockerId): array
+    {
+        $rows = Database::blockedUsers()->find(
+            ['blockerId' => $blockerId],
+            ['sort' => ['createdAt' => -1]]
+        )->toArray();
+
+        $result = [];
+        foreach ($rows as $row) {
+            $blocked = Database::users()->findOne(['_id' => $row['blockedId']]);
+            if ($blocked !== null) {
+                $result[] = ['id' => (string) $blocked['_id'], 'handle' => $blocked['handle']];
+            }
+        }
+
+        return $result;
+    }
 }

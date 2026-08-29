@@ -47,10 +47,15 @@ final class CreateCommunity
             'slug' => $slug,
             'name' => $name,
             'topic' => $topic,
+            'description' => '',
             'visibility' => $visibility,
             'creatorId' => $user['_id'],
+            'creatorHandle' => $user['handle'],
             'memberCount' => 1,
             'color' => self::COLORS[array_rand(self::COLORS)],
+            'iconUrl' => null,
+            'bannerUrl' => null,
+            'rules' => [],
             'createdAt' => new UTCDateTime(),
         ]);
 

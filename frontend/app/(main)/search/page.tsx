@@ -8,6 +8,10 @@ import { PostCard } from "@/components/post-card";
 import { searchApi, type Community, type Post } from "@/lib/api";
 import { formatMemberCount } from "@/lib/format";
 
+// "public" is the implicit default posting destination, not a real user-created
+// community — it shouldn't turn up as a discoverable search result.
+const NON_COMMUNITY_SLUGS = new Set(["public"]);
+
 function SearchPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -51,7 +55,7 @@ function SearchPageInner() {
 
   const hasSearched = query.trim() !== "" && results !== null;
   const posts = hasSearched ? results.posts : [];
-  const communities = hasSearched ? results.communities : [];
+  const communities = hasSearched ? results.communities.filter((c) => !NON_COMMUNITY_SLUGS.has(c.slug)) : [];
   const hasResults = posts.length > 0 || communities.length > 0;
 
   return (
@@ -89,7 +93,7 @@ function SearchPageInner() {
                 <span className={`h-8 w-8 shrink-0 rounded-full ${c.color}`} />
                 <span className="min-w-0">
                   <span className="flex items-center gap-1 truncate text-sm font-medium text-slate-700 dark:text-slate-200">
-                    c/{c.name}
+                    {c.name}
                     {c.visibility === "private" && (
                       <Lock className="h-3 w-3 shrink-0 text-slate-400 dark:text-slate-500" />
                     )}

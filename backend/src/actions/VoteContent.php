@@ -16,6 +16,7 @@ final class VoteContent
     public static function handle(string $targetType, string $id, array $body): never
     {
         $user = Auth::requireUser();
+        Auth::assertNotModerator($user, 'vote');
         $targetId = Ids::parse($id);
 
         if ($targetId === null) {

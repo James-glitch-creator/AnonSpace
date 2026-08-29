@@ -18,7 +18,7 @@ final class ListMyPosts
         ['limit' => $limit, 'skip' => $skip, 'page' => $page] = Pagination::fromQuery($query);
 
         $posts = Database::posts()->find(
-            ['authorId' => $user['_id']],
+            ['authorId' => $user['_id'], 'status' => 'visible'],
             ['sort' => ['createdAt' => -1], 'skip' => $skip, 'limit' => $limit]
         )->toArray();
 

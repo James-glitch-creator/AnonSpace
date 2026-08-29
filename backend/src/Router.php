@@ -42,9 +42,13 @@ final class Router
         $params = [];
 
         foreach ($patternParts as $i => $part) {
+            // Decode here, not before splitting - a literal %2F in a segment must stay
+            // encoded until this point, or it would wrongly look like an extra "/".
+            $pathPart = urldecode($pathParts[$i]);
+
             if (str_starts_with($part, '{') && str_ends_with($part, '}')) {
-                $params[substr($part, 1, -1)] = $pathParts[$i];
-            } elseif ($part !== $pathParts[$i]) {
+                $params[substr($part, 1, -1)] = $pathPart;
+            } elseif ($part !== $pathPart) {
                 return null;
             }
         }

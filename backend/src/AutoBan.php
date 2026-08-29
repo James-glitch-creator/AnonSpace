@@ -3,15 +3,14 @@
 namespace App;
 
 use MongoDB\BSON\ObjectId;
-use MongoDB\BSON\UTCDateTime;
 
 final class AutoBan
 {
     /** Content is auto-banned once its downvote share reaches this fraction of total votes. */
-    private const THRESHOLD = 0.25;
+    public const THRESHOLD = 0.5;
 
     /** Content needs at least this many total votes before the ratio is evaluated at all. */
-    private const MIN_VOTES = 18;
+    public const MIN_VOTES = 4; // TODO: temporary for testing - restore to 18 afterward.
 
     /**
      * @param 'post'|'comment' $targetType
@@ -33,32 +32,10 @@ final class AutoBan
             return;
         }
 
-        $ratio = $downvotes / $total;
-
-        if ($ratio < self::THRESHOLD) {
+        if ($downvotes / $total < self::THRESHOLD) {
             return;
         }
 
-        $collection->updateOne(['_id' => $targetId], ['$set' => ['status' => 'banned']]);
-
-        $communitySlug = $targetType === 'post'
-            ? $target['communitySlug']
-            : self::parentCommunitySlug($target);
-
-        Database::banLogs()->insertOne([
-            'targetType' => $targetType === 'post' ? 'Post' : 'Comment',
-            'targetId' => $targetId,
-            'communitySlug' => $communitySlug,
-            'finalRatio' => round($ratio * 100, 2),
-            'reason' => 'Auto-ban: downvote ratio exceeded threshold',
-            'createdAt' => new UTCDateTime(),
-        ]);
-    }
-
-    private static function parentCommunitySlug(array $comment): string
-    {
-        $post = Database::posts()->findOne(['_id' => $comment['postId']]);
-
-        return $post['communitySlug'] ?? 'unknown';
+        ContentModeration::ban($targetType, $targetId, 'auto', null);
     }
 }

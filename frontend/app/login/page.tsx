@@ -18,8 +18,10 @@ export default function LoginPage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await authApi.login(email, password);
-      router.push("/home");
+      const { user } = await authApi.login(email, password);
+      const destination =
+        user.role === "superadmin" ? "/admin/accounts" : user.role === "admin" ? "/admin" : "/home";
+      router.push(destination);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong.");
     } finally {

@@ -15,6 +15,7 @@ final class CreateComment
     public static function handle(string $postId, array $body): never
     {
         $user = Auth::requireUser();
+        Auth::assertNotModerator($user, 'comment');
         $postObjectId = Ids::parse($postId);
 
         if ($postObjectId === null) {

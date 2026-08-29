@@ -18,3 +18,8 @@ export function formatMemberCount(count: number): string {
   if (count >= 1_000) return `${(count / 1_000).toFixed(1)}K members`;
   return `${count} member${count === 1 ? "" : "s"}`;
 }
+
+/** "Created Jan 5, 2025" style date, for e.g. a community's About panel. */
+export function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}

@@ -19,19 +19,23 @@ function getServerSnapshot() {
   return false;
 }
 
-export function ThemeToggle() {
-  const isDark = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+/** Shared with anything that needs to read or drive the current theme (e.g. the Settings page's Appearance card). */
+export function useIsDarkTheme() {
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
 
-  function toggleTheme() {
-    const next = !isDark;
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem(STORAGE_KEY, next ? "dark" : "light");
-  }
+export function setTheme(dark: boolean) {
+  document.documentElement.classList.toggle("dark", dark);
+  localStorage.setItem(STORAGE_KEY, dark ? "dark" : "light");
+}
+
+export function ThemeToggle() {
+  const isDark = useIsDarkTheme();
 
   return (
     <button
       type="button"
-      onClick={toggleTheme}
+      onClick={() => setTheme(!isDark)}
       aria-label="Toggle theme"
       className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-cyan-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-cyan-400"
     >

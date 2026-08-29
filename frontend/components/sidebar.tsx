@@ -1,12 +1,11 @@
 "use client";
 
-import { Bookmark, Crown, LogOut, MessageCircle, Rss, Search, Settings, TrendingUp } from "lucide-react";
+import { Bookmark, Crown, LogOut, Rss, Search, Settings, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { authApi, chatApi, communitiesApi, type Community } from "@/lib/api";
-
-const UNREAD_POLL_INTERVAL_MS = 15000;
+import { CommunityAvatar } from "@/components/community-avatar";
+import { authApi, communitiesApi, type Community } from "@/lib/api";
 
 const newsLinks = [
   { label: "Latest Posts", href: "/home", icon: Rss },
@@ -15,7 +14,9 @@ const newsLinks = [
   { label: "Search", href: "/search", icon: Search },
 ];
 
-const messagingLinks = [{ label: "Private Chat", href: "/chat", icon: MessageCircle }];
+// "public" is the implicit default posting destination, not a real user-created
+// community — it shouldn't show up as something the user has joined.
+const NON_COMMUNITY_SLUGS = new Set(["public"]);
 
 function NavLink({
   href,
@@ -81,26 +82,12 @@ function LogoutButton() {
 export function Sidebar() {
   const pathname = usePathname();
   const [communities, setCommunities] = useState<Community[]>([]);
-  const [hasUnreadChat, setHasUnreadChat] = useState(false);
 
   useEffect(() => {
     communitiesApi
       .mine()
-      .then(({ communities }) => setCommunities(communities))
+      .then(({ communities }) => setCommunities(communities.filter((c) => !NON_COMMUNITY_SLUGS.has(c.slug))))
       .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    function checkUnread() {
-      chatApi
-        .hasUnread()
-        .then(({ hasUnread }) => setHasUnreadChat(hasUnread))
-        .catch(() => {});
-    }
-
-    checkUnread();
-    const interval = setInterval(checkUnread, UNREAD_POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -112,20 +99,6 @@ export function Sidebar() {
           </p>
           {newsLinks.map((link) => (
             <NavLink key={link.href} {...link} active={pathname === link.href} />
-          ))}
-        </nav>
-
-        <nav className="space-y-1">
-          <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            Messaging
-          </p>
-          {messagingLinks.map((link) => (
-            <NavLink
-              key={link.href}
-              {...link}
-              active={pathname === link.href}
-              notify={link.href === "/chat" && hasUnreadChat}
-            />
           ))}
         </nav>
 
@@ -148,12 +121,13 @@ export function Sidebar() {
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                 }`}
               >
-                <span
-                  className={`h-2.5 w-2.5 shrink-0 rounded-full ${c.color} ${
+                <CommunityAvatar
+                  community={c}
+                  className={`h-6 w-6 ${
                     c.isOwner ? "ring-2 ring-amber-400 ring-offset-1 ring-offset-white dark:ring-offset-slate-950" : ""
                   }`}
                 />
-                <span className="min-w-0 flex-1 truncate">c/{c.name}</span>
+                <span className="min-w-0 flex-1 truncate">{c.name}</span>
                 {c.isOwner && <Crown className="h-3.5 w-3.5 shrink-0 text-amber-500" />}
               </Link>
             ))

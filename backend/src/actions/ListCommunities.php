@@ -15,7 +15,7 @@ final class ListCommunities
         $joinedIds = Communities::joinedIds($user['_id']);
 
         $communities = Communities::collection()->find(
-            ['visibility' => ['$ne' => 'private']],
+            ['visibility' => ['$ne' => 'private'], 'status' => ['$ne' => 'banned']],
             ['sort' => ['memberCount' => -1]]
         )->toArray();
 

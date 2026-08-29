@@ -44,8 +44,14 @@ final class Search
         // posts stay member-only. This lets someone find a private community to request
         // to join, without exposing what's actually posted inside it.
         $joinedIds = Communities::joinedIds($user['_id']);
-        $communities = Communities::collection()->find(['name' => $regex], ['limit' => 20])->toArray();
+        $communities = Communities::collection()->find(
+            ['name' => $regex, 'status' => ['$ne' => 'banned']],
+            ['limit' => 20]
+        )->toArray();
 
+        // Deliberately no account search here - searching up other people's accounts and
+        // browsing their post history is an admin/moderation tool (see /api/admin/users),
+        // not something regular users can do to each other on an anonymous platform.
         Response::ok([
             'posts' => array_map(
                 fn($p) => PostView::render(

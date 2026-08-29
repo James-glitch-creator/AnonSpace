@@ -1,8 +1,8 @@
 "use client";
 
 import { Image as ImageIcon, Video as VideoIcon, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
 import { ApiError, communitiesApi, postsApi, type Community } from "@/lib/api";
 
 type MediaMode = "none" | "photos" | "video";
@@ -13,10 +13,15 @@ const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
 const PUBLIC_SLUG = "public";
 
-export default function SubmitPostPage() {
+function SubmitPostPageInner() {
   const router = useRouter();
-  const [communitySlug, setCommunitySlug] = useState(PUBLIC_SLUG);
-  const [communityLabel, setCommunityLabel] = useState("Public");
+  const searchParams = useSearchParams();
+  // Lets a community's own "Create Post" button deep-link straight into posting there,
+  // instead of landing on Public and making the person pick it again from the list.
+  const prefillSlug = searchParams.get("c");
+
+  const [communitySlug, setCommunitySlug] = useState(prefillSlug || PUBLIC_SLUG);
+  const [communityLabel, setCommunityLabel] = useState(prefillSlug ? prefillSlug : "Public");
   const [communityColor, setCommunityColor] = useState("bg-slate-500");
   const [joinedCommunities, setJoinedCommunities] = useState<Community[]>([]);
   const [isPicking, setIsPicking] = useState(false);
@@ -32,8 +37,10 @@ export default function SubmitPostPage() {
     communitiesApi
       .get(PUBLIC_SLUG)
       .then(({ community }) => {
-        setCommunityLabel(community.name);
-        setCommunityColor(community.color);
+        if (!prefillSlug) {
+          setCommunityLabel(community.name);
+          setCommunityColor(community.color);
+        }
       })
       .catch(() => {});
 
@@ -41,6 +48,19 @@ export default function SubmitPostPage() {
       .mine()
       .then(({ communities }) => setJoinedCommunities(communities))
       .catch(() => {});
+
+    if (prefillSlug && prefillSlug !== PUBLIC_SLUG) {
+      communitiesApi
+        .get(prefillSlug)
+        .then(({ community }) => {
+          setCommunitySlug(community.slug);
+          setCommunityLabel(community.name);
+          setCommunityColor(community.color);
+        })
+        .catch(() => {});
+    }
+    // Only ever meant to run once, from whatever ?c= the page was opened with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const communityOptions = useMemo(() => {
@@ -183,7 +203,7 @@ export default function SubmitPostPage() {
                       className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                     >
                       <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${c.color}`} />
-                      {c.slug === PUBLIC_SLUG ? "Public" : `c/${c.name}`}
+                      {c.slug === PUBLIC_SLUG ? "Public" : c.name}
                     </button>
                   ))
                 )}
@@ -196,7 +216,7 @@ export default function SubmitPostPage() {
               className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 transition-all duration-200 hover:border-cyan-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
             >
               <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${communityColor}`} />
-              {communitySlug === PUBLIC_SLUG ? "Public" : `c/${communityLabel}`}
+              {communitySlug === PUBLIC_SLUG ? "Public" : communityLabel}
             </button>
           )}
         </div>
@@ -301,5 +321,13 @@ export default function SubmitPostPage() {
         </button>
       </form>
     </main>
+  );
+}
+
+export default function SubmitPostPage() {
+  return (
+    <Suspense fallback={null}>
+      <SubmitPostPageInner />
+    </Suspense>
   );
 }

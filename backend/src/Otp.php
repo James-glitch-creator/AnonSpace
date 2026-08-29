@@ -29,6 +29,15 @@ final class Otp
             'createdAt' => new UTCDateTime(),
         ]);
 
+        // Dev convenience only: email deliverability (spam filters, a fresh sender's
+        // reputation, etc.) is unpredictable and out of this app's control, so it
+        // shouldn't be what blocks testing locally. Prints to the terminal running
+        // `php -S` (PHP's default error_log destination) - never runs in production,
+        // where the real inbox is the only place the code should ever appear.
+        if (Env::get('APP_ENV', 'development') !== 'production') {
+            error_log("[OTP] {$email} -> {$code}");
+        }
+
         return $code;
     }
 

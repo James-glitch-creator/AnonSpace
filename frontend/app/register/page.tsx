@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const [code, setCode] = useState("");
   const [ticket, setTicket] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -50,6 +51,12 @@ export default function RegisterPage() {
   async function handleCompleteSignup(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (password !== confirmPassword) {
+      setError("Passwords don't match.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await authApi.completeSignup(ticket, password);
@@ -194,6 +201,21 @@ export default function RegisterPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter at least 8 characters"
+                    className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-400">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter your password"
                     className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
                   />
                 </div>

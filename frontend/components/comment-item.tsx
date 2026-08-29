@@ -10,8 +10,9 @@ import {
   VenetianMask,
 } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { ApiError, commentsApi, getCurrentUser, postsApi, type Comment } from "@/lib/api";
+import { ApiError, commentsApi, getCurrentUser, isModerator, postsApi, type Comment } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/format";
+import { BanButton } from "./admin/ban-button";
 import { ReportButton } from "./report-button";
 import { UserHandleMenu } from "./user-handle-menu";
 
@@ -35,6 +36,7 @@ export function CommentItem({
   const [myVote, setMyVote] = useState(comment.myVote);
   const [isVoting, setIsVoting] = useState(false);
   const [isOwnComment, setIsOwnComment] = useState(false);
+  const [isMod, setIsMod] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -47,7 +49,10 @@ export function CommentItem({
   const [visibleReplyCount, setVisibleReplyCount] = useState(REPLIES_PAGE_SIZE);
 
   useEffect(() => {
-    getCurrentUser().then((user) => setIsOwnComment(user?.id === comment.authorId));
+    getCurrentUser().then((user) => {
+      setIsOwnComment(user?.id === comment.authorId);
+      setIsMod(isModerator(user));
+    });
   }, [comment.authorId]);
 
   useEffect(() => {
@@ -64,7 +69,7 @@ export function CommentItem({
   }, [isMenuOpen]);
 
   async function castVote(direction: "up" | "down") {
-    if (isVoting || isOwnComment) return;
+    if (isVoting || isOwnComment || isMod) return;
     const nextVote = myVote === direction ? null : direction;
     setIsVoting(true);
     try {
@@ -150,56 +155,64 @@ export function CommentItem({
       </p>
 
       <div className="mt-1.5 flex items-center gap-2 pl-9">
-        <div className="flex items-center gap-1 rounded-full bg-slate-100 px-1 py-0.5 dark:bg-slate-800">
+        <div className="flex items-center gap-0.5 rounded-full bg-slate-100 px-1 py-0.5 dark:bg-slate-800">
           <button
             type="button"
             aria-label="Upvote"
-            disabled={isVoting || isOwnComment}
-            title={isOwnComment ? "You can't vote on your own comment" : undefined}
+            disabled={isVoting || isOwnComment || isMod}
+            title={isMod ? "Admins can't vote" : isOwnComment ? "You can't vote on your own comment" : undefined}
             onClick={() => castVote("up")}
             className={`flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200 disabled:cursor-not-allowed ${
               myVote === "up"
-                ? "bg-cyan-500 text-white"
+                ? "text-cyan-500"
                 : "text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-700"
-            } ${isOwnComment ? "opacity-40 hover:bg-transparent dark:hover:bg-transparent" : ""}`}
+            } ${isOwnComment || isMod ? "opacity-40 hover:bg-transparent dark:hover:bg-transparent" : ""}`}
           >
-            <ArrowBigUp className="h-3.5 w-3.5" />
+            <ArrowBigUp className={`h-3.5 w-3.5 ${myVote === "up" ? "fill-current" : ""}`} />
           </button>
-          <span className="min-w-5 text-center text-xs font-semibold text-slate-600 dark:text-slate-300">
-            {upvotes.toLocaleString()}
+          <span
+            className={`min-w-5 text-center text-xs font-bold ${
+              myVote === "up"
+                ? "text-cyan-500"
+                : myVote === "down"
+                  ? "text-rose-500"
+                  : "text-slate-600 dark:text-slate-300"
+            }`}
+          >
+            {(upvotes - downvotes).toLocaleString()}
           </span>
-        </div>
-
-        <div className="flex items-center gap-1 rounded-full bg-slate-100 px-1 py-0.5 dark:bg-slate-800">
           <button
             type="button"
             aria-label="Downvote"
-            disabled={isVoting || isOwnComment}
-            title={isOwnComment ? "You can't vote on your own comment" : undefined}
+            disabled={isVoting || isOwnComment || isMod}
+            title={isMod ? "Admins can't vote" : isOwnComment ? "You can't vote on your own comment" : undefined}
             onClick={() => castVote("down")}
             className={`flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200 disabled:cursor-not-allowed ${
               myVote === "down"
-                ? "bg-rose-500 text-white"
+                ? "text-rose-500"
                 : "text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-700"
-            } ${isOwnComment ? "opacity-40 hover:bg-transparent dark:hover:bg-transparent" : ""}`}
+            } ${isOwnComment || isMod ? "opacity-40 hover:bg-transparent dark:hover:bg-transparent" : ""}`}
           >
-            <ArrowBigDown className="h-3.5 w-3.5" />
+            <ArrowBigDown className={`h-3.5 w-3.5 ${myVote === "down" ? "fill-current" : ""}`} />
           </button>
-          <span className="min-w-5 text-center text-xs font-semibold text-slate-600 dark:text-slate-300">
-            {downvotes.toLocaleString()}
-          </span>
         </div>
 
         <button
           type="button"
+          disabled={isMod}
+          title={isMod ? "Admins can't comment" : undefined}
           onClick={() => setIsReplying((v) => !v)}
-          className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 dark:disabled:hover:bg-transparent"
         >
           <ReplyIcon className="h-3.5 w-3.5" />
           Reply
         </button>
 
-        {!isOwnComment && (
+        {isMod && (
+          <BanButton targetType="comment" targetId={comment.id} targetLabel={comment.body} variant="icon" />
+        )}
+
+        {!isOwnComment && !isMod && (
           <div className="relative shrink-0" ref={menuRef}>
             <button
               type="button"
@@ -212,14 +225,16 @@ export function CommentItem({
 
             {isMenuOpen && (
               <div className="absolute left-0 top-full z-10 mt-1 w-36 space-y-0.5 rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-800 dark:bg-slate-900">
-                {/* No auto-close here: closing this dropdown on click would unmount
-                    ReportButton (and its just-opened modal) in the same render. It
-                    closes on its own via the outside-click handler once you're done. */}
+                {/* No auto-close on click here: closing this dropdown on click would
+                    unmount ReportButton (and its just-opened modal) in the same render.
+                    It closes on its own via the outside-click handler, or a couple
+                    seconds after a report goes through (onReported below). */}
                 <ReportButton
                   targetType="comment"
                   targetId={comment.id}
                   targetLabel={comment.body}
                   variant="menu-item"
+                  onReported={() => setIsMenuOpen(false)}
                 />
               </div>
             )}

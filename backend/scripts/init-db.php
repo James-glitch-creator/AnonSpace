@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use App\Auth;
 use App\Database;
 use App\Env;
 use MongoDB\BSON\UTCDateTime;
@@ -36,8 +37,25 @@ ensureCollection($db, 'users', [
         'email' => ['bsonType' => 'string'],
         'passwordHash' => ['bsonType' => 'string'],
         'handle' => ['bsonType' => 'string'],
-        'role' => ['enum' => ['user', 'admin']],
+        // Only collected for admin accounts, via the superadmin-only registration flow -
+        // regular users stay anonymous and never provide this.
+        'fullName' => ['bsonType' => ['string', 'null']],
+        'role' => ['enum' => ['user', 'admin', 'superadmin']],
+        // Absent/'active' = normal. A banned account can no longer authenticate at all -
+        // enforced centrally in Auth::currentUser(), not per-endpoint.
+        'status' => ['enum' => ['active', 'banned']],
         'createdAt' => ['bsonType' => 'date'],
+        // Set the first time this account rolls a new anonymous name; gates the
+        // once-every-6-months cooldown in RefreshHandle. Absent = never refreshed yet.
+        'handleChangedAt' => ['bsonType' => 'date'],
+        'mutedNotificationTypes' => [
+            'bsonType' => 'array',
+            'items' => [
+                'enum' => [
+                    'reported', 'content_banned', 'account_banned', 'report_approved', 'report_dismissed',
+                ],
+            ],
+        ],
     ],
 ]);
 
@@ -60,10 +78,27 @@ ensureCollection($db, 'communities', [
         'slug' => ['bsonType' => 'string'],
         'name' => ['bsonType' => 'string'],
         'topic' => ['bsonType' => 'string'],
+        // Longer-form "About Community" text, distinct from the one-line topic.
+        'description' => ['bsonType' => 'string'],
         'visibility' => ['enum' => ['public', 'private']],
         'creatorId' => ['bsonType' => 'objectId'],
+        // Denormalized like posts.authorHandle - can go stale if the creator later rolls
+        // their handle, which mirrors how post/comment authorship already behaves.
+        'creatorHandle' => ['bsonType' => 'string'],
         'memberCount' => ['bsonType' => 'int'],
         'color' => ['bsonType' => 'string'],
+        'iconUrl' => ['bsonType' => ['string', 'null']],
+        'bannerUrl' => ['bsonType' => ['string', 'null']],
+        'rules' => [
+            'bsonType' => 'array',
+            'items' => [
+                'bsonType' => 'object',
+                'properties' => [
+                    'title' => ['bsonType' => 'string'],
+                    'body' => ['bsonType' => 'string'],
+                ],
+            ],
+        ],
         'createdAt' => ['bsonType' => 'date'],
     ],
 ]);
@@ -85,6 +120,13 @@ ensureCollection($db, 'posts', [
         'upvotes' => ['bsonType' => 'int'],
         'downvotes' => ['bsonType' => 'int'],
         'commentCount' => ['bsonType' => 'int'],
+        // Set by the community's creator to feature a post in its "highlights" strip.
+        'isPinned' => ['bsonType' => 'bool'],
+        // Set when this post is a repost - the original post's _id. The repost carries
+        // its own body/community/etc. independently; this is only a pointer, resolved
+        // live at render time so an edit/removal of the original is reflected everywhere
+        // it's been reposted rather than baked into a stale copy.
+        'repostOfId' => ['bsonType' => ['objectId', 'null']],
         'createdAt' => ['bsonType' => 'date'],
     ],
 ]);
@@ -142,6 +184,10 @@ ensureCollection($db, 'reports', [
         'reporterId' => ['bsonType' => 'objectId'],
         'status' => ['enum' => ['pending', 'reviewed', 'dismissed']],
         'createdAt' => ['bsonType' => 'date'],
+        // Set together the moment a pending report is approved or dismissed - who
+        // reviewed it and when. Absent while status is still 'pending'.
+        'reviewedBy' => ['bsonType' => ['objectId', 'null']],
+        'reviewedAt' => ['bsonType' => ['date', 'null']],
     ],
 ]);
 
@@ -149,11 +195,16 @@ ensureCollection($db, 'ban_logs', [
     'bsonType' => 'object',
     'required' => ['targetType', 'targetId', 'communitySlug', 'finalRatio', 'reason', 'createdAt'],
     'properties' => [
-        'targetType' => ['enum' => ['Post', 'Comment']],
+        'targetType' => ['enum' => ['Post', 'Comment', 'User']],
         'targetId' => ['bsonType' => 'objectId'],
-        'communitySlug' => ['bsonType' => 'string'],
-        'finalRatio' => ['bsonType' => 'double'],
+        // Null for account bans, which aren't scoped to a community.
+        'communitySlug' => ['bsonType' => ['string', 'null']],
+        // Null for account bans - there's no vote ratio behind those.
+        'finalRatio' => ['bsonType' => ['double', 'null']],
         'reason' => ['bsonType' => 'string'],
+        // The admin who approved this ban; null means the automatic downvote-ratio system
+        // did it (AutoBan), not a person.
+        'bannedBy' => ['bsonType' => ['objectId', 'null']],
         'createdAt' => ['bsonType' => 'date'],
     ],
 ]);
@@ -196,6 +247,37 @@ ensureCollection($db, 'blocked_users', [
     'properties' => [
         'blockerId' => ['bsonType' => 'objectId'],
         'blockedId' => ['bsonType' => 'objectId'],
+        'createdAt' => ['bsonType' => 'date'],
+    ],
+]);
+
+ensureCollection($db, 'notifications', [
+    'bsonType' => 'object',
+    'required' => ['userId', 'type', 'message', 'isRead', 'createdAt'],
+    'properties' => [
+        'userId' => ['bsonType' => 'objectId'],
+        'type' => [
+            'enum' => ['reported', 'content_banned', 'account_banned', 'report_approved', 'report_dismissed'],
+        ],
+        'message' => ['bsonType' => 'string'],
+        'targetType' => ['bsonType' => ['string', 'null']],
+        'targetId' => ['bsonType' => ['objectId', 'null']],
+        'isRead' => ['bsonType' => 'bool'],
+        'createdAt' => ['bsonType' => 'date'],
+    ],
+]);
+
+ensureCollection($db, 'admin_logs', [
+    'bsonType' => 'object',
+    'required' => ['action', 'targetId', 'targetHandle', 'performedBy', 'performedByHandle', 'createdAt'],
+    'properties' => [
+        'action' => ['enum' => ['granted', 'revoked']],
+        // The admin account being granted or revoked.
+        'targetId' => ['bsonType' => 'objectId'],
+        'targetHandle' => ['bsonType' => 'string'],
+        // The superadmin who did it.
+        'performedBy' => ['bsonType' => 'objectId'],
+        'performedByHandle' => ['bsonType' => 'string'],
         'createdAt' => ['bsonType' => 'date'],
     ],
 ]);
@@ -261,6 +343,15 @@ $db->selectCollection('blocked_users')->createIndex(
 );
 echo "- blocked_users: unique (blockerId, blockedId)\n";
 
+$db->selectCollection('notifications')->createIndex(
+    ['userId' => 1, 'createdAt' => -1],
+    ['name' => 'user_created_idx']
+);
+echo "- notifications: (userId, createdAt) idx\n";
+
+$db->selectCollection('admin_logs')->createIndex(['createdAt' => -1], ['name' => 'created_idx']);
+echo "- admin_logs: createdAt idx\n";
+
 echo "\nSeeding communities...\n";
 
 $communities = $db->selectCollection('communities');
@@ -279,6 +370,51 @@ foreach ($seed as $c) {
         ['upsert' => true]
     );
     echo "  - {$c['slug']}\n";
+}
+
+echo "\nEnsuring superadmin account...\n";
+
+// The one designated superadmin, created once here rather than through signup — admin
+// accounts can only ever be registered by a superadmin (via /api/admin/accounts), and
+// there has to be a first superadmin to do that. Password is only set on first insert:
+// if they've since changed it via Settings, re-running this script must not clobber it.
+$users = Database::users();
+$superadminEmail = 'anonspace99@gmail.com';
+$superadmin = $users->findOne(['email' => $superadminEmail]);
+
+// The superadmin isn't anonymous like everyone else - there's only ever one, and it's
+// always labeled plainly as "Superadmin" rather than getting a random handle.
+$superadminHandle = 'Superadmin';
+
+if ($superadmin === null) {
+    // No account under this email yet - if an older superadmin exists under a different
+    // email (e.g. this constant changed since it was first seeded), rename it in place
+    // so we keep one superadmin with its existing password, not a second account.
+    $existingSuperadmin = $users->findOne(['role' => 'superadmin']);
+    if ($existingSuperadmin !== null) {
+        $users->updateOne(
+            ['_id' => $existingSuperadmin['_id']],
+            ['$set' => ['email' => $superadminEmail, 'handle' => $superadminHandle]]
+        );
+        echo "  ~ renamed superadmin ({$existingSuperadmin['email']} -> {$superadminEmail})\n";
+    } else {
+        $users->insertOne([
+            'email' => $superadminEmail,
+            'passwordHash' => Auth::hashPassword('12345678'),
+            'handle' => $superadminHandle,
+            'role' => 'superadmin',
+            'createdAt' => new UTCDateTime(),
+        ]);
+        echo "  + created superadmin ({$superadminEmail})\n";
+    }
+} elseif (($superadmin['role'] ?? 'user') !== 'superadmin') {
+    $users->updateOne(['_id' => $superadmin['_id']], ['$set' => ['role' => 'superadmin', 'handle' => $superadminHandle]]);
+    echo "  ~ promoted existing account to superadmin ({$superadminEmail})\n";
+} elseif (($superadmin['handle'] ?? null) !== $superadminHandle) {
+    $users->updateOne(['_id' => $superadmin['_id']], ['$set' => ['handle' => $superadminHandle]]);
+    echo "  ~ fixed superadmin handle -> {$superadminHandle}\n";
+} else {
+    echo "  = superadmin already exists ({$superadminEmail})\n";
 }
 
 echo "\nDone.\n";

@@ -3,6 +3,7 @@
 import { ChevronDown, Crown } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { CommunityAvatar } from "@/components/community-avatar";
 import { communitiesApi, type Community } from "@/lib/api";
 import { formatMemberCount } from "@/lib/format";
 
@@ -18,10 +19,10 @@ function CommunityRow({ c, ownerBadge = false }: { c: Community; ownerBadge?: bo
       href={`/c/${c.slug}`}
       className="flex items-center gap-3 rounded-lg px-2 py-2 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800"
     >
-      <span className={`h-8 w-8 shrink-0 rounded-full ${c.color}`} />
+      <CommunityAvatar community={c} className="h-8 w-8" />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1 truncate text-sm font-medium text-slate-700 dark:text-slate-200">
-          c/{c.name}
+          {c.name}
           {ownerBadge && <Crown className="h-3 w-3 shrink-0 text-amber-500" />}
         </span>
         <span className="block truncate text-xs text-slate-400 dark:text-slate-500">
@@ -45,7 +46,9 @@ export function RightRail() {
 
     communitiesApi
       .mine()
-      .then(({ communities }) => setCreated(communities.filter((c) => c.isOwner)))
+      .then(({ communities }) =>
+        setCreated(communities.filter((c) => c.isOwner && !NON_COMMUNITY_SLUGS.has(c.slug)))
+      )
       .catch(() => {});
   }, []);
 

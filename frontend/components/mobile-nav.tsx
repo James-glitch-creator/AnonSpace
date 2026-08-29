@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageCircle, Rss, Search, Settings, TrendingUp } from "lucide-react";
+import { Bookmark, MessageCircle, Rss, Settings, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -11,7 +11,7 @@ const UNREAD_POLL_INTERVAL_MS = 15000;
 const links = [
   { label: "Latest", href: "/home", icon: Rss },
   { label: "Popular", href: "/popular", icon: TrendingUp },
-  { label: "Search", href: "/search", icon: Search },
+  { label: "Saved", href: "/saved", icon: Bookmark },
   { label: "Chat", href: "/chat", icon: MessageCircle },
   { label: "Setting", href: "/settings", icon: Settings },
 ];

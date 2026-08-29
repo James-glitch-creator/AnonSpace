@@ -13,6 +13,7 @@ final class StartChatThread
     public static function handle(array $body): never
     {
         $user = Auth::requireUser();
+        Auth::assertNotModerator($user, 'message other accounts');
         $recipientHandle = trim((string) ($body['recipientHandle'] ?? ''));
 
         if ($recipientHandle === '') {

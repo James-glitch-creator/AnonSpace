@@ -21,8 +21,12 @@ final class Auth
 
     public static function issueSession(array $user): string
     {
+        // 'role' rides along as a routing hint for the frontend proxy only - it can go
+        // stale if a role changes mid-session (e.g. an admin gets revoked), but that's
+        // harmless: every protected backend action re-checks the live role from the
+        // database on every request, never trusting this claim for real authorization.
         $token = Jwt::encode(
-            ['sub' => (string) $user['_id']],
+            ['sub' => (string) $user['_id'], 'role' => $user['role'] ?? 'user'],
             Env::get('JWT_SECRET', ''),
             (int) Env::get('JWT_TTL', '604800')
         );
@@ -67,7 +71,17 @@ final class Auth
         }
 
         $user = Database::users()->findOne(['_id' => new ObjectId($payload['sub'])]);
-        return $user === null ? null : (array) $user;
+        if ($user === null) {
+            return null;
+        }
+
+        // A banned account loses its session the instant this is checked, on every
+        // request, everywhere - no need to hunt down each endpoint individually.
+        if (($user['status'] ?? 'active') === 'banned') {
+            return null;
+        }
+
+        return (array) $user;
     }
 
     /** Strips sensitive fields and normalizes a user document for API responses. */
@@ -77,8 +91,13 @@ final class Auth
             'id' => (string) $user['_id'],
             'email' => $user['email'],
             'handle' => $user['handle'],
+            'fullName' => $user['fullName'] ?? null,
             'role' => $user['role'] ?? 'user',
             'createdAt' => isset($user['createdAt']) ? $user['createdAt']->toDateTime()->format(DATE_ATOM) : null,
+            'handleChangedAt' => isset($user['handleChangedAt'])
+                ? $user['handleChangedAt']->toDateTime()->format(DATE_ATOM)
+                : null,
+            'mutedNotificationTypes' => array_values((array) ($user['mutedNotificationTypes'] ?? [])),
         ];
     }
 
@@ -90,6 +109,40 @@ final class Auth
         }
 
         return $user;
+    }
+
+    /** Admin panel access - both admins and superadmins get this. */
+    public static function requireAdmin(): array
+    {
+        $user = self::requireUser();
+        $role = $user['role'] ?? 'user';
+        if ($role !== 'admin' && $role !== 'superadmin') {
+            Response::error('Admin access required', 403);
+        }
+
+        return $user;
+    }
+
+    /** Managing admin accounts themselves - superadmin only. */
+    public static function requireSuperAdmin(): array
+    {
+        $user = self::requireUser();
+        if (($user['role'] ?? 'user') !== 'superadmin') {
+            Response::error('Superadmin access required', 403);
+        }
+
+        return $user;
+    }
+
+    /**
+     * Admins and superadmins moderate; they don't participate. Blocks voting,
+     * commenting, and messaging so a moderator's account can't be used to engage.
+     */
+    public static function assertNotModerator(array $user, string $action): void
+    {
+        if (($user['role'] ?? 'user') !== 'user') {
+            Response::error("Admins can't {$action}.", 403);
+        }
     }
 
     private static function tokenFromRequest(): ?string

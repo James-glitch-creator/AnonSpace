@@ -1,7 +1,9 @@
 "use client";
 
 import { MessageCircle } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { getCurrentUser, isModerator } from "@/lib/api";
 import { useChat } from "./chat-context";
 import { ReportButton } from "./report-button";
 
@@ -9,6 +11,10 @@ import { ReportButton } from "./report-button";
  * Wraps an author handle so tapping it opens a small menu to message or report that
  * account. Renders as plain text (no menu) when `interactive` is false — e.g. for your
  * own posts/comments, where messaging/reporting yourself doesn't make sense.
+ *
+ * For admins, tapping a handle skips the menu entirely and goes straight to that
+ * account's admin page instead — they can't message or report anyone, but jumping
+ * straight to "everything this account has posted" is the actual point for them.
  */
 export function UserHandleMenu({
   userId,
@@ -25,7 +31,12 @@ export function UserHandleMenu({
 }) {
   const { openChatWith } = useChat();
   const [isOpen, setIsOpen] = useState(false);
+  const [isMod, setIsMod] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    getCurrentUser().then((user) => setIsMod(isModerator(user)));
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -42,6 +53,14 @@ export function UserHandleMenu({
 
   if (!interactive) {
     return <span className={className}>{children}</span>;
+  }
+
+  if (isMod) {
+    return (
+      <Link href={`/admin/users/${encodeURIComponent(handle)}`} className={`${className ?? ""} rounded hover:underline`}>
+        {children}
+      </Link>
+    );
   }
 
   return (
@@ -67,10 +86,17 @@ export function UserHandleMenu({
             <MessageCircle className="h-4 w-4" />
             Message
           </button>
-          {/* No auto-close here: closing this dropdown on click would unmount
-              ReportButton (and its just-opened modal) in the same render. It
-              closes on its own via the outside-click handler once you're done. */}
-          <ReportButton targetType="user" targetId={userId} targetLabel={handle} variant="menu-item" />
+          {/* No auto-close on click here: closing this dropdown on click would unmount
+              ReportButton (and its just-opened modal) in the same render. It closes on
+              its own via the outside-click handler, or a couple seconds after a report
+              goes through (onReported below). */}
+          <ReportButton
+            targetType="user"
+            targetId={userId}
+            targetLabel={handle}
+            variant="menu-item"
+            onReported={() => setIsOpen(false)}
+          />
         </div>
       )}
     </span>

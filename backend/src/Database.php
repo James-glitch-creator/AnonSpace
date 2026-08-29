@@ -78,4 +78,16 @@ final class Database
     {
         return self::connection()->selectCollection('blocked_users');
     }
+
+    public static function notifications(): \MongoDB\Collection
+    {
+        return self::connection()->selectCollection('notifications');
+    }
+
+    /** Grant/revoke history for admin accounts - a superadmin's own audit trail, separate
+     *  from ban_logs (which is moderation, an admin's job, not a superadmin's). */
+    public static function adminLogs(): \MongoDB\Collection
+    {
+        return self::connection()->selectCollection('admin_logs');
+    }
 }

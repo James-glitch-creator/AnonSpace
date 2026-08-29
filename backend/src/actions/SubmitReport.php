@@ -6,20 +6,13 @@ use App\Auth;
 use App\Communities;
 use App\Database;
 use App\Ids;
+use App\ModerationReasons;
+use App\Notifications;
 use App\Response;
 use MongoDB\BSON\UTCDateTime;
 
 final class SubmitReport
 {
-    private const REASONS = [
-        'Spam or scam',
-        'Harassment or hate speech',
-        'Misinformation',
-        'Illegal content',
-        'Off-topic',
-        'Other',
-    ];
-
     private const TARGET_LABELS = [
         'post' => 'Post',
         'comment' => 'Comment',
@@ -42,7 +35,7 @@ final class SubmitReport
         }
 
         $reason = (string) ($body['reason'] ?? '');
-        if (!in_array($reason, self::REASONS, true)) {
+        if (!in_array($reason, ModerationReasons::LIST, true)) {
             Response::error('Invalid reason', 422);
         }
 
@@ -81,6 +74,15 @@ final class SubmitReport
             'status' => 'pending',
             'createdAt' => new UTCDateTime(),
         ]);
+
+        // Let the reported account know, without revealing who reported them - keeps
+        // the "who reported this" detail out of reach the same way voting already is.
+        if ($ownerId !== null) {
+            $message = $targetType === 'user'
+                ? "Someone reported your account for \"{$reason}\"."
+                : "Your {$targetType} was reported for \"{$reason}\".";
+            Notifications::create($ownerId, 'reported', $message, $targetType, $targetId);
+        }
 
         Response::ok(['message' => 'Report submitted'], 201);
     }

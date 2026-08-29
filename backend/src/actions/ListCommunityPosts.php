@@ -21,7 +21,7 @@ final class ListCommunityPosts
         $user = Auth::requireUser();
 
         $community = Database::communities()->findOne(['slug' => $slug]);
-        if ($community === null) {
+        if ($community === null || ($community['status'] ?? 'active') === 'banned') {
             Response::error('Community not found', 404);
         }
 
@@ -39,6 +39,11 @@ final class ListCommunityPosts
         $filter = ['communitySlug' => $slug, 'status' => 'visible'];
         if ($q !== '') {
             $filter['body'] = new Regex(preg_quote($q, '/'), 'i');
+        }
+        // Used by the community page's "highlights" strip to fetch just the pinned posts,
+        // separately from the normal (unfiltered) feed below it.
+        if ((string) ($query['pinned'] ?? '') === 'true') {
+            $filter['isPinned'] = true;
         }
 
         $sortSpec = match ($sort) {

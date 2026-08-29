@@ -15,6 +15,7 @@ final class SendChatMessage
     public static function handle(string $threadId, array $body, array $files = []): never
     {
         $user = Auth::requireUser();
+        Auth::assertNotModerator($user, 'message other accounts');
         $threadObjectId = Ids::parse($threadId);
 
         if ($threadObjectId === null) {

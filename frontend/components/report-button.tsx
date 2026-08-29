@@ -1,28 +1,27 @@
 "use client";
 
 import { CircleCheck, Flag, X } from "lucide-react";
-import { useState } from "react";
-import { ApiError, reportsApi, type ReportTargetType } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { ApiError, MODERATION_REASONS, reportsApi, type ReportTargetType } from "@/lib/api";
 
-const REASONS = [
-  "Spam or scam",
-  "Harassment or hate speech",
-  "Misinformation",
-  "Illegal content",
-  "Off-topic",
-  "Other",
-];
+/** How long the "Reported" confirmation stays up before onReported fires. */
+const CONFIRMATION_MS = 2000;
 
 export function ReportButton({
   targetType,
   targetId,
   targetLabel,
   variant = "pill",
+  onReported,
 }: {
   targetType: ReportTargetType;
   targetId: string;
   targetLabel: string;
   variant?: "pill" | "menu-item";
+  /** Menu-item usage only: fired once the "Reported" confirmation has had its moment,
+   *  so the parent can close the dropdown it lives in instead of leaving it open with
+   *  nothing left to do in it. */
+  onReported?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<string | null>(null);
@@ -30,6 +29,13 @@ export function ReportButton({
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!submitted) return;
+    const timeout = setTimeout(() => onReported?.(), CONFIRMATION_MS);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitted]);
 
   function close() {
     setOpen(false);
@@ -124,7 +130,7 @@ export function ReportButton({
             </p>
 
             <div className="space-y-1.5">
-              {REASONS.map((r) => (
+              {MODERATION_REASONS.map((r) => (
                 <label
                   key={r}
                   className={`flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2 text-sm transition-all duration-200 ${
@@ -138,7 +144,10 @@ export function ReportButton({
                     name="report-reason"
                     value={r}
                     checked={reason === r}
-                    onChange={() => setReason(r)}
+                    onChange={() => {
+                      setReason(r);
+                      if (r !== "Other") setDetails("");
+                    }}
                     className="accent-cyan-500"
                   />
                   {r}
@@ -146,17 +155,19 @@ export function ReportButton({
               ))}
             </div>
 
-            <textarea
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              placeholder={needsDetails ? "Describe the reason for this report..." : "Add any extra context (optional)"}
-              rows={2}
-              className="mt-3 w-full resize-none rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500"
-            />
             {needsDetails && (
-              <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-                Required when reporting for another reason.
-              </p>
+              <>
+                <textarea
+                  value={details}
+                  onChange={(e) => setDetails(e.target.value)}
+                  placeholder="Describe the reason for this report..."
+                  rows={2}
+                  className="mt-3 w-full resize-none rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500"
+                />
+                <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
+                  Required when reporting for another reason.
+                </p>
+              </>
             )}
 
             <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">

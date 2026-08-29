@@ -1,11 +1,12 @@
 "use client";
 
-import { Bell, Plus, Search, VenetianMask } from "lucide-react";
+import { Plus, Search, VenetianMask } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { authApi } from "@/lib/api";
-import { ThemeToggle } from "./theme-toggle";
+import { MobileMenu } from "./mobile-menu";
+import { NotificationBell } from "./notification-bell";
 
 export function Navbar() {
   const router = useRouter();
@@ -28,6 +29,8 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90">
       <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-4 px-4">
+        <MobileMenu handle={handle} />
+
         {/* Logo */}
         <Link href="/home" className="group flex shrink-0 items-center gap-2.5">
           <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-lg shadow-cyan-500/30 ring-1 ring-white/20 transition-all duration-200 group-hover:scale-105">
@@ -68,15 +71,7 @@ export function Navbar() {
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Post</span>
           </Link>
-          <button
-            type="button"
-            aria-label="Alerts"
-            className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-cyan-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-cyan-400"
-          >
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-cyan-500 ring-2 ring-white dark:ring-slate-950" />
-          </button>
-          <ThemeToggle />
+          <NotificationBell />
           <Link
             href="/profile"
             className="ml-1 hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-100 py-1.5 pl-2.5 pr-3 text-sm font-medium text-slate-700 transition-all duration-200 hover:border-cyan-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 sm:flex"
