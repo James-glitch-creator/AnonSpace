@@ -43,20 +43,18 @@ export function RepostModal({
 
   // A private community's posts can only ever be reshared back into that same community -
   // the backend rejects anything else, so lock the picker here too rather than let people
-  // hit an error after filling out the form.
+  // hit an error after filling out the form. Derived at render time, not synced into state
+  // via an effect - `communitySlug` only ever tracks the user's own manual pick.
   const originCommunity = joined.find((c) => c.slug === target.communitySlug);
   const originIsPrivate = originCommunity?.visibility === "private";
-
-  useEffect(() => {
-    if (originIsPrivate) setCommunitySlug(target.communitySlug);
-  }, [originIsPrivate, target.communitySlug]);
+  const effectiveCommunitySlug = originIsPrivate ? target.communitySlug : communitySlug;
 
   async function handleRepost() {
     if (isSubmitting) return;
     setIsSubmitting(true);
     setError(null);
     try {
-      await postsApi.create({ communitySlug, body: caption.trim(), repostOfId: target.id });
+      await postsApi.create({ communitySlug: effectiveCommunitySlug, body: caption.trim(), repostOfId: target.id });
       onReposted();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong.");
@@ -111,7 +109,7 @@ export function RepostModal({
         <div className="mt-3">
           <label className="mb-1 block text-xs font-medium text-slate-400 dark:text-slate-500">Repost to</label>
           <select
-            value={communitySlug}
+            value={effectiveCommunitySlug}
             onChange={(e) => setCommunitySlug(e.target.value)}
             disabled={originIsPrivate}
             className="w-full rounded-full border border-slate-200 bg-slate-100 px-3.5 py-2 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"

@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { PostCard } from "@/components/post-card";
-import { searchApi, type Community, type Post } from "@/lib/api";
+import { POSTS_PAGE_SIZE, usePaginatedPosts } from "@/hooks/use-paginated-posts";
+import { searchApi, type Community } from "@/lib/api";
 import { formatMemberCount } from "@/lib/format";
 
 // "public" is the implicit default posting destination, not a real user-created
@@ -18,8 +19,29 @@ function SearchPageInner() {
   const initialQuery = searchParams.get("q") ?? "";
 
   const [query, setQuery] = useState(initialQuery);
-  const [results, setResults] = useState<{ posts: Post[]; communities: Community[] } | null>(null);
+  const [communities, setCommunities] = useState<Community[]>([]);
   const lastSyncedQuery = useRef(initialQuery);
+  // Derived, not stored - so clearing the search box hides results immediately instead of
+  // leaving the previous query's results on screen until another search actually runs.
+  const hasSearched = query.trim() !== "";
+
+  const {
+    posts,
+    isInitialLoading,
+    isLoadingMore,
+    hasMore,
+    error,
+    sentinelRef,
+    loadMore,
+    reload: reloadPosts,
+  } = usePaginatedPosts(
+    (page) =>
+      searchApi.search(query.trim(), { page, limit: POSTS_PAGE_SIZE }).then((res) => {
+        if (page === 1) setCommunities(res.communities);
+        return res.posts;
+      }),
+    { auto: false }
+  );
 
   // Picks up query changes that came from outside this page (e.g. the navbar search),
   // while ignoring the URL updates this page makes for itself below.
@@ -36,10 +58,7 @@ function SearchPageInner() {
     if (!q) return;
 
     const timeout = setTimeout(() => {
-      searchApi
-        .search(q)
-        .then((res) => setResults(res))
-        .catch(() => {});
+      reloadPosts();
 
       if (lastSyncedQuery.current !== q) {
         lastSyncedQuery.current = q;
@@ -50,13 +69,16 @@ function SearchPageInner() {
     }, 300);
 
     return () => clearTimeout(timeout);
+    // reloadPosts always reads the latest query (see usePaginatedPosts) - it doesn't need
+    // to be a dep itself, only the query that should restart the search from page 1.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
-  const hasSearched = query.trim() !== "" && results !== null;
-  const posts = hasSearched ? results.posts : [];
-  const communities = hasSearched ? results.communities.filter((c) => !NON_COMMUNITY_SLUGS.has(c.slug)) : [];
-  const hasResults = posts.length > 0 || communities.length > 0;
+  const visibleCommunities = hasSearched
+    ? communities.filter((c) => !NON_COMMUNITY_SLUGS.has(c.slug))
+    : [];
+  const visiblePosts = hasSearched ? posts : [];
+  const hasResults = visiblePosts.length > 0 || visibleCommunities.length > 0;
 
   return (
     <main className="col-span-1 space-y-4 lg:col-span-2">
@@ -78,13 +100,13 @@ function SearchPageInner() {
         </div>
       </div>
 
-      {hasSearched && communities.length > 0 && (
+      {hasSearched && visibleCommunities.length > 0 && (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Communities
           </h2>
           <div className="space-y-1">
-            {communities.map((c) => (
+            {visibleCommunities.map((c) => (
               <Link
                 key={c.slug}
                 href={`/c/${c.slug}`}
@@ -108,13 +130,43 @@ function SearchPageInner() {
         </div>
       )}
 
-      {hasSearched && !hasResults ? (
+      {hasSearched && isInitialLoading ? (
+        <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>
+      ) : hasSearched && !hasResults ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
           No results for &ldquo;{query}&rdquo;.
         </div>
       ) : (
-        posts.map((post) => <PostCard key={post.id} post={post} />)
+        <>
+          {visiblePosts.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))}
+
+          {hasSearched && error && (
+            <div className="py-4 text-center">
+              <p className="mb-2 text-sm text-rose-500">{error}</p>
+              <button
+                type="button"
+                onClick={loadMore}
+                className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 hover:border-cyan-400 hover:text-cyan-600 dark:border-slate-700 dark:text-slate-300"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          {hasSearched && isLoadingMore && (
+            <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">Loading more...</p>
+          )}
+          {hasSearched && visiblePosts.length > 0 && !hasMore && !error && (
+            <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
+              That&apos;s everything.
+            </p>
+          )}
+        </>
       )}
+
+      <div ref={sentinelRef} aria-hidden="true" className="h-px" />
     </main>
   );
 }

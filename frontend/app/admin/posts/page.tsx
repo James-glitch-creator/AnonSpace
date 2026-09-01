@@ -3,7 +3,8 @@
 import { Search, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PostCard } from "@/components/post-card";
-import { adminApi, ApiError, type Post } from "@/lib/api";
+import { POSTS_PAGE_SIZE, usePaginatedPosts } from "@/hooks/use-paginated-posts";
+import { adminApi } from "@/lib/api";
 
 type Sort = "new" | "top";
 
@@ -16,24 +17,24 @@ const SORT_OPTIONS: { value: Sort; label: string }[] = [
  *  Unlike the reports/ban-log pages, this isn't about content someone flagged - it's how
  *  an admin looks around the platform on their own and bans something directly. */
 export default function AdminPostsPage() {
-  const [posts, setPosts] = useState<Post[]>([]);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("new");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const { posts, setPosts, isInitialLoading, isLoadingMore, hasMore, error, sentinelRef, loadMore, reload } =
+    usePaginatedPosts(
+      (page) =>
+        adminApi
+          .listPosts({ q: query.trim() || undefined, sort, page, limit: POSTS_PAGE_SIZE })
+          .then((res) => res.posts),
+      { auto: false }
+    );
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setIsLoading(true);
-      setError(null);
-      adminApi
-        .listPosts({ q: query.trim() || undefined, sort })
-        .then(({ posts }) => setPosts(posts))
-        .catch((err) => setError(err instanceof ApiError ? err.message : "Something went wrong."))
-        .finally(() => setIsLoading(false));
-    }, 300);
-
+    const timeout = setTimeout(() => reload(), 300);
     return () => clearTimeout(timeout);
+    // reload always reads the latest query/sort (see usePaginatedPosts) - it doesn't need
+    // to be a dep itself, only the filters that should restart the list from page 1.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, sort]);
 
   function handleBanned(id: string) {
@@ -79,9 +80,7 @@ export default function AdminPostsPage() {
         </div>
       </div>
 
-      {error && <p className="text-xs font-medium text-red-500">{error}</p>}
-
-      {isLoading ? (
+      {isInitialLoading ? (
         <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>
       ) : posts.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
@@ -92,8 +91,30 @@ export default function AdminPostsPage() {
           {posts.map((post) => (
             <PostCard key={post.id} post={post} onBanned={handleBanned} />
           ))}
+
+          {error && (
+            <div className="py-4 text-center">
+              <p className="mb-2 text-sm text-rose-500">{error}</p>
+              <button
+                type="button"
+                onClick={loadMore}
+                className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 hover:border-cyan-400 hover:text-cyan-600 dark:border-slate-700 dark:text-slate-300"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          {isLoadingMore && (
+            <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">Loading more...</p>
+          )}
+          {!hasMore && !error && (
+            <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">That&apos;s everything.</p>
+          )}
         </div>
       )}
+
+      <div ref={sentinelRef} aria-hidden="true" className="h-px" />
     </div>
   );
 }

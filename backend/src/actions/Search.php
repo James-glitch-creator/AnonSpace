@@ -6,6 +6,7 @@ use App\Auth;
 use App\Communities;
 use App\CommunityView;
 use App\Database;
+use App\Pagination;
 use App\PostView;
 use App\Response;
 use App\SavedPosts;
@@ -23,6 +24,8 @@ final class Search
             Response::ok(['posts' => [], 'communities' => []]);
         }
 
+        ['limit' => $limit, 'skip' => $skip, 'page' => $page] = Pagination::fromQuery($query);
+
         $regex = new Regex(preg_quote($q, '/'), 'i');
 
         $postFilter = ['status' => 'visible', 'body' => $regex];
@@ -33,7 +36,7 @@ final class Search
 
         $posts = Database::posts()->find(
             $postFilter,
-            ['sort' => ['createdAt' => -1], 'limit' => 20]
+            ['sort' => ['createdAt' => -1], 'skip' => $skip, 'limit' => $limit]
         )->toArray();
 
         $ids = array_map(fn($p) => $p['_id'], $posts);
@@ -42,12 +45,16 @@ final class Search
 
         // Communities themselves are discoverable by name even when private — only their
         // posts stay member-only. This lets someone find a private community to request
-        // to join, without exposing what's actually posted inside it.
+        // to join, without exposing what's actually posted inside it. Not paginated - it's
+        // a short "did you mean this community" list, so only fetched alongside page 1;
+        // scrolling for more posts shouldn't keep re-querying it.
         $joinedIds = Communities::joinedIds($user['_id']);
-        $communities = Communities::collection()->find(
-            ['name' => $regex, 'status' => ['$ne' => 'banned']],
-            ['limit' => 20]
-        )->toArray();
+        $communities = $page === 1
+            ? Communities::collection()->find(
+                ['name' => $regex, 'status' => ['$ne' => 'banned']],
+                ['limit' => 20]
+            )->toArray()
+            : [];
 
         // Deliberately no account search here - searching up other people's accounts and
         // browsing their post history is an admin/moderation tool (see /api/admin/users),

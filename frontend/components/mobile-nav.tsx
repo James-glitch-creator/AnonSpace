@@ -9,7 +9,7 @@ import { chatApi } from "@/lib/api";
 const UNREAD_POLL_INTERVAL_MS = 15000;
 
 const links = [
-  { label: "Latest", href: "/home", icon: Rss },
+  { label: "For You", href: "/home", icon: Rss },
   { label: "Popular", href: "/popular", icon: TrendingUp },
   { label: "Saved", href: "/saved", icon: Bookmark },
   { label: "Chat", href: "/chat", icon: MessageCircle },

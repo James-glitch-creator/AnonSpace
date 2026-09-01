@@ -296,7 +296,7 @@ function ChatMessages({
         messages.map((m) => (
           <div
             key={m.id}
-            className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
+            className={`max-w-[80%] min-w-0 overflow-hidden rounded-2xl px-3 py-2 text-sm ${
               m.senderId === currentUserId
                 ? "ml-auto rounded-tr-sm bg-cyan-500 text-white"
                 : "rounded-tl-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
@@ -317,7 +317,11 @@ function ChatMessages({
                 className={`max-h-56 w-full rounded-lg ${m.body ? "mb-1.5" : ""}`}
               />
             )}
-            {linkifyMessageBody(m.body, m.senderId === currentUserId)}
+            {m.body ? (
+              <p className="min-w-0 whitespace-pre-wrap break-all">
+                {linkifyMessageBody(m.body, m.senderId === currentUserId)}
+              </p>
+            ) : null}
             <span
               className={`mt-0.5 block text-[10px] ${
                 m.senderId === currentUserId ? "text-cyan-50/80" : "text-slate-400 dark:text-slate-500"
@@ -352,7 +356,7 @@ function linkifyMessageBody(body: string, isMine: boolean) {
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
-        className={`underline underline-offset-2 ${isMine ? "text-white" : "text-cyan-600 dark:text-cyan-400"}`}
+        className={`break-all underline underline-offset-2 ${isMine ? "text-white" : "text-cyan-600 dark:text-cyan-400"}`}
       >
         {part}
       </a>

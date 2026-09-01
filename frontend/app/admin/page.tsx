@@ -41,7 +41,6 @@ export default function AdminOverviewPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setIsLoading(true);
     adminApi
       .overview(range)
       .then(({ stats, adminActions }) => {
@@ -51,6 +50,14 @@ export default function AdminOverviewPage() {
       .catch((err) => setError(err instanceof ApiError ? err.message : "Something went wrong."))
       .finally(() => setIsLoading(false));
   }, [range]);
+
+  // Setting isLoading lives in the event handler, not the effect above - keeps the effect
+  // itself limited to "sync with the range that's already changed" rather than doing a
+  // synchronous setState of its own before that.
+  function handleRangeChange(next: AdminStatsRange) {
+    setIsLoading(true);
+    setRange(next);
+  }
 
   const rows = useMemo(() => {
     if (category === "Bans") return actions.filter((a) => a.action === "ban");
@@ -81,7 +88,7 @@ export default function AdminOverviewPage() {
             Server &amp; content oversight — no identity data ever surfaces here
           </p>
         </div>
-        <RangeDropdown value={range} options={RANGE_OPTIONS} onChange={setRange} />
+        <RangeDropdown value={range} options={RANGE_OPTIONS} onChange={handleRangeChange} />
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

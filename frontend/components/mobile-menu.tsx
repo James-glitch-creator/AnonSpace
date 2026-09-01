@@ -3,7 +3,7 @@
 import { ChevronRight, Crown, Menu, User, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { communitiesApi, type Community } from "@/lib/api";
 import { formatMemberCount } from "@/lib/format";
@@ -41,20 +41,18 @@ function CommunityRow({
   );
 }
 
+const subscribe = () => () => {};
+
 export function MobileMenu({ handle }: { handle: string | null }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  // Close automatically on navigation: the sheet is only "open" while the path it was
+  // opened on is still current, so a Link click doesn't need a pathname effect to
+  // setState(false).
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const open = openPath === pathname;
+  const mounted = useSyncExternalStore(subscribe, () => true, () => false);
   const [trending, setTrending] = useState<Community[]>([]);
   const [mine, setMine] = useState<Community[]>([]);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     if (!open) return;
@@ -84,7 +82,7 @@ export function MobileMenu({ handle }: { handle: string | null }) {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => setOpenPath(pathname)}
         aria-label="Open menu"
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-cyan-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-cyan-400 lg:hidden"
       >
@@ -98,7 +96,7 @@ export function MobileMenu({ handle }: { handle: string | null }) {
             <button
               type="button"
               aria-label="Close menu"
-              onClick={() => setOpen(false)}
+              onClick={() => setOpenPath(null)}
               className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"
             />
             <div className="relative flex h-full w-64 max-w-[65%] flex-col overflow-y-auto border-r border-slate-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-950">
@@ -108,7 +106,7 @@ export function MobileMenu({ handle }: { handle: string | null }) {
                 </span>
                 <button
                   type="button"
-                  onClick={() => setOpen(false)}
+                  onClick={() => setOpenPath(null)}
                   aria-label="Close menu"
                   className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-all duration-200 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                 >
@@ -118,6 +116,7 @@ export function MobileMenu({ handle }: { handle: string | null }) {
 
               <Link
                 href="/profile"
+                onClick={() => setOpenPath(null)}
                 className="mb-5 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 transition-all duration-200 hover:border-cyan-400 dark:border-slate-800 dark:bg-slate-900"
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-500 text-white">
@@ -144,7 +143,7 @@ export function MobileMenu({ handle }: { handle: string | null }) {
                       <CommunityRow
                         key={c.slug}
                         c={c}
-                        onNavigate={() => setOpen(false)}
+                        onNavigate={() => setOpenPath(null)}
                       />
                     ))}
                   </div>
@@ -165,7 +164,7 @@ export function MobileMenu({ handle }: { handle: string | null }) {
                       <CommunityRow
                         key={c.slug}
                         c={c}
-                        onNavigate={() => setOpen(false)}
+                        onNavigate={() => setOpenPath(null)}
                       />
                     ))}
                   </div>
@@ -174,6 +173,7 @@ export function MobileMenu({ handle }: { handle: string | null }) {
 
               <Link
                 href="/communities/new"
+                onClick={() => setOpenPath(null)}
                 className="mt-auto block w-full rounded-full bg-cyan-500 px-3 py-2 text-center text-xs font-semibold text-white transition-all duration-200 hover:bg-cyan-600"
               >
                 + New Community

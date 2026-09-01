@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, Crown, LogOut, Rss, Search, Settings, TrendingUp } from "lucide-react";
+import { Bookmark, LogOut, Rss, Settings, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -8,10 +8,9 @@ import { CommunityAvatar } from "@/components/community-avatar";
 import { authApi, communitiesApi, type Community } from "@/lib/api";
 
 const newsLinks = [
-  { label: "Latest Posts", href: "/home", icon: Rss },
+  { label: "For You", href: "/home", icon: Rss },
   { label: "Popular Posts", href: "/popular", icon: TrendingUp },
   { label: "Saved Posts", href: "/saved", icon: Bookmark },
-  { label: "Search", href: "/search", icon: Search },
 ];
 
 // "public" is the implicit default posting destination, not a real user-created
@@ -86,7 +85,11 @@ export function Sidebar() {
   useEffect(() => {
     communitiesApi
       .mine()
-      .then(({ communities }) => setCommunities(communities.filter((c) => !NON_COMMUNITY_SLUGS.has(c.slug))))
+      .then(({ communities }) =>
+        // Joined, not created - communitiesApi.mine() returns every community the user
+        // belongs to, which includes ones they own (creating one auto-joins you to it).
+        setCommunities(communities.filter((c) => !NON_COMMUNITY_SLUGS.has(c.slug) && !c.isOwner))
+      )
       .catch(() => {});
   }, []);
 
@@ -104,7 +107,7 @@ export function Sidebar() {
 
         <nav className="space-y-1">
           <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            My Communities
+            Joined Communities
           </p>
           {communities.length === 0 ? (
             <p className="px-3 text-xs text-slate-400 dark:text-slate-500">
@@ -121,14 +124,8 @@ export function Sidebar() {
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                 }`}
               >
-                <CommunityAvatar
-                  community={c}
-                  className={`h-6 w-6 ${
-                    c.isOwner ? "ring-2 ring-amber-400 ring-offset-1 ring-offset-white dark:ring-offset-slate-950" : ""
-                  }`}
-                />
+                <CommunityAvatar community={c} className="h-6 w-6" />
                 <span className="min-w-0 flex-1 truncate">{c.name}</span>
-                {c.isOwner && <Crown className="h-3.5 w-3.5 shrink-0 text-amber-500" />}
               </Link>
             ))
           )}

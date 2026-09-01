@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { ApiError, authApi } from "@/lib/api";
+import Link from "next/link";
+import { useEffect, useState, type FormEvent } from "react";
+import { ApiError, authApi, getCurrentUser } from "@/lib/api";
 
-function PasswordCard() {
+function PasswordCard({ email }: { email?: string }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -87,19 +88,33 @@ function PasswordCard() {
         {error && <p className="text-xs font-medium text-red-500">{error}</p>}
         {success && <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Password updated.</p>}
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-full bg-cyan-500 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isSubmitting ? "Updating..." : "Update password"}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="rounded-full bg-cyan-500 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isSubmitting ? "Updating..." : "Update password"}
+          </button>
+          <Link
+            href={email ? `/forgot-password?email=${encodeURIComponent(email)}` : "/forgot-password"}
+            className="text-xs font-medium text-slate-500 hover:text-cyan-600 hover:underline dark:text-slate-400 dark:hover:text-cyan-400"
+          >
+            Forgot your current password?
+          </Link>
+        </div>
       </form>
     </div>
   );
 }
 
 export default function AdminSettingsPage() {
+  const [email, setEmail] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    getCurrentUser().then((user) => setEmail(user?.email));
+  }, []);
+
   return (
     <div className="space-y-5">
       <div>
@@ -107,7 +122,7 @@ export default function AdminSettingsPage() {
         <p className="text-xs text-slate-400 dark:text-slate-500">Manage your admin account</p>
       </div>
 
-      <PasswordCard />
+      <PasswordCard email={email} />
     </div>
   );
 }

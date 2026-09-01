@@ -81,6 +81,7 @@ ensureCollection($db, 'communities', [
         // Longer-form "About Community" text, distinct from the one-line topic.
         'description' => ['bsonType' => 'string'],
         'visibility' => ['enum' => ['public', 'private']],
+        'status' => ['enum' => ['active', 'banned']],
         'creatorId' => ['bsonType' => 'objectId'],
         // Denormalized like posts.authorHandle - can go stale if the creator later rolls
         // their handle, which mirrors how post/comment authorship already behaves.
@@ -120,6 +121,7 @@ ensureCollection($db, 'posts', [
         'upvotes' => ['bsonType' => 'int'],
         'downvotes' => ['bsonType' => 'int'],
         'commentCount' => ['bsonType' => 'int'],
+        'status' => ['enum' => ['visible', 'banned']],
         // Set by the community's creator to feature a post in its "highlights" strip.
         'isPinned' => ['bsonType' => 'bool'],
         // Set when this post is a repost - the original post's _id. The repost carries
@@ -142,6 +144,7 @@ ensureCollection($db, 'comments', [
         'body' => ['bsonType' => 'string'],
         'upvotes' => ['bsonType' => 'int'],
         'downvotes' => ['bsonType' => 'int'],
+        'status' => ['enum' => ['visible', 'banned']],
         'createdAt' => ['bsonType' => 'date'],
     ],
 ]);
@@ -300,11 +303,19 @@ echo "- communities: unique slug\n";
 
 $db->selectCollection('posts')->createIndex(['communitySlug' => 1], ['name' => 'community_idx']);
 $db->selectCollection('posts')->createIndex(['authorId' => 1], ['name' => 'author_idx']);
-echo "- posts: communitySlug idx, authorId idx\n";
+$db->selectCollection('posts')->createIndex(
+    ['status' => 1, 'createdAt' => -1],
+    ['name' => 'feed_candidates_idx']
+);
+echo "- posts: communitySlug idx, authorId idx, feed candidates idx\n";
 
 $db->selectCollection('comments')->createIndex(['postId' => 1], ['name' => 'post_idx']);
 $db->selectCollection('comments')->createIndex(['parentId' => 1], ['name' => 'parent_idx']);
-echo "- comments: postId idx, parentId idx\n";
+$db->selectCollection('comments')->createIndex(
+    ['authorId' => 1, 'createdAt' => -1],
+    ['name' => 'author_created_idx']
+);
+echo "- comments: postId idx, parentId idx, author/created idx\n";
 
 $db->selectCollection('chat_threads')->createIndex(['participantIds' => 1], ['name' => 'participants_idx']);
 echo "- chat_threads: participantIds idx\n";
@@ -322,7 +333,11 @@ $db->selectCollection('votes')->createIndex(
     ['userId' => 1, 'targetType' => 1, 'targetId' => 1],
     ['unique' => true, 'name' => 'uniq_user_target']
 );
-echo "- votes: unique (userId, targetType, targetId)\n";
+$db->selectCollection('votes')->createIndex(
+    ['userId' => 1, 'targetType' => 1, 'createdAt' => -1],
+    ['name' => 'user_type_created_idx']
+);
+echo "- votes: unique (userId, targetType, targetId), user/type/created idx\n";
 
 $db->selectCollection('community_members')->createIndex(
     ['communityId' => 1, 'userId' => 1],
@@ -335,13 +350,18 @@ $db->selectCollection('saved_posts')->createIndex(
     ['userId' => 1, 'postId' => 1],
     ['unique' => true, 'name' => 'uniq_user_post']
 );
-echo "- saved_posts: unique (userId, postId)\n";
+$db->selectCollection('saved_posts')->createIndex(
+    ['userId' => 1, 'createdAt' => -1],
+    ['name' => 'user_created_idx']
+);
+echo "- saved_posts: unique (userId, postId), user/created idx\n";
 
 $db->selectCollection('blocked_users')->createIndex(
     ['blockerId' => 1, 'blockedId' => 1],
     ['unique' => true, 'name' => 'uniq_blocker_blocked']
 );
-echo "- blocked_users: unique (blockerId, blockedId)\n";
+$db->selectCollection('blocked_users')->createIndex(['blockedId' => 1], ['name' => 'blocked_idx']);
+echo "- blocked_users: unique (blockerId, blockedId), blockedId idx\n";
 
 $db->selectCollection('notifications')->createIndex(
     ['userId' => 1, 'createdAt' => -1],

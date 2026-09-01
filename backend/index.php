@@ -36,6 +36,7 @@ use App\Actions\ListComments;
 use App\Actions\ListCommunities;
 use App\Actions\ListCommunityMembers;
 use App\Actions\ListCommunityPosts;
+use App\Actions\ListFeed;
 use App\Actions\ListMyCommunities;
 use App\Actions\ListMyPosts;
 use App\Actions\ListNotifications;
@@ -52,7 +53,9 @@ use App\Actions\Me;
 use App\Actions\PinPost;
 use App\Actions\RefreshHandle;
 use App\Actions\RequestAdminSignupOtp;
+use App\Actions\RequestPasswordResetOtp;
 use App\Actions\RequestSignupOtp;
+use App\Actions\ResetPassword;
 use App\Actions\RevokeAdmin;
 use App\Actions\ReviewReport;
 use App\Actions\Search;
@@ -65,6 +68,7 @@ use App\Actions\UnblockUser;
 use App\Actions\UpdateCommunity;
 use App\Actions\UpdateNotificationPreferences;
 use App\Actions\VerifyAdminSignupOtp;
+use App\Actions\VerifyPasswordResetOtp;
 use App\Actions\VerifySignupOtp;
 use App\Actions\VoteContent;
 use App\Cors;
@@ -102,9 +106,7 @@ if (str_starts_with($requestPath, '/uploads/')) {
         && str_starts_with($requestedFile, $uploadsDir . DIRECTORY_SEPARATOR)
         && is_file($requestedFile)
     ) {
-        header('Content-Type: ' . (Uploads::mimeFor($requestedFile) ?? 'application/octet-stream'));
-        header('Cache-Control: public, max-age=31536000, immutable');
-        readfile($requestedFile);
+        Uploads::stream($requestedFile);
         exit;
     }
 
@@ -123,8 +125,20 @@ $router->add('POST', '/api/auth/logout', fn() => Logout::handle());
 $router->add('GET', '/api/auth/me', fn() => Me::handle());
 $router->add('POST', '/api/auth/password', fn() => ChangePassword::handle(jsonBody()));
 $router->add('POST', '/api/auth/handle/refresh', fn() => RefreshHandle::handle());
+$router->add(
+    'POST',
+    '/api/auth/password-reset/request-otp',
+    fn() => RequestPasswordResetOtp::handle(jsonBody())
+);
+$router->add(
+    'POST',
+    '/api/auth/password-reset/verify-otp',
+    fn() => VerifyPasswordResetOtp::handle(jsonBody())
+);
+$router->add('POST', '/api/auth/password-reset/complete', fn() => ResetPassword::handle(jsonBody()));
 
 // Posts
+$router->add('GET', '/api/feed', fn() => ListFeed::handle($_GET));
 $router->add('GET', '/api/posts', fn() => ListPosts::handle($_GET));
 $router->add('POST', '/api/posts', fn() => CreatePost::handle(requestBody(), $_FILES));
 $router->add('GET', '/api/posts/mine', fn() => ListMyPosts::handle($_GET));

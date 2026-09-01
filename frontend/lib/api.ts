@@ -153,6 +153,26 @@ export const authApi = {
     request<{ success: true; handle: string; nextEligibleAt: string }>("/api/auth/handle/refresh", {
       method: "POST",
     }),
+
+  // Forgot-password - same request-otp/verify-otp/ticket shape as signup, just against an
+  // account that must already exist instead of one that must not.
+  requestPasswordResetOtp: (email: string) =>
+    request<{ success: true; message: string }>("/api/auth/password-reset/request-otp", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  verifyPasswordResetOtp: (email: string, code: string) =>
+    request<{ success: true; ticket: string }>("/api/auth/password-reset/verify-otp", {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    }),
+
+  resetPassword: (ticket: string, password: string) =>
+    request<{ success: true; message: string }>("/api/auth/password-reset/complete", {
+      method: "POST",
+      body: JSON.stringify({ ticket, password }),
+    }),
 };
 
 /** Admins and superadmins moderate; they don't vote, comment, share, or message. */
@@ -255,6 +275,11 @@ export type CommunityMember = {
 type VoteResult = { success: true; upvotes: number; downvotes: number; myVote: Vote; banned: boolean };
 
 export const postsApi = {
+  feed: (params?: { cursor?: string; limit?: number }) =>
+    request<{ success: true; posts: Post[]; nextCursor: string | null }>(
+      withQuery("/api/feed", params)
+    ),
+
   list: (params?: { sort?: "new" | "top"; page?: number; limit?: number }) =>
     request<{ success: true; posts: Post[]; page: number }>(withQuery("/api/posts", params)),
 
@@ -388,8 +413,12 @@ export const communitiesApi = {
 };
 
 export const searchApi = {
-  search: (q: string) =>
-    request<{ success: true; posts: Post[]; communities: Community[] }>(withQuery("/api/search", { q })),
+  // Communities are only ever returned on page 1 - see Search::handle - so callers paging
+  // through posts past the first page just keep whatever community list they already have.
+  search: (q: string, params?: { page?: number; limit?: number }) =>
+    request<{ success: true; posts: Post[]; communities: Community[] }>(
+      withQuery("/api/search", { q, ...params })
+    ),
 };
 
 export type ChatThread = {

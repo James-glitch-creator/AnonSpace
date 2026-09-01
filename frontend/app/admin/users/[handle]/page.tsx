@@ -5,24 +5,51 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BanButton } from "@/components/admin/ban-button";
 import { PostCard } from "@/components/post-card";
-import { adminApi, type AdminUserProfile, type Post } from "@/lib/api";
+import { POSTS_PAGE_SIZE, usePaginatedPosts } from "@/hooks/use-paginated-posts";
+import { adminApi, type AdminUserProfile } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/format";
 
 export default function AdminUserProfilePage() {
   const { handle } = useParams<{ handle: string }>();
   const [profile, setProfile] = useState<AdminUserProfile | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
   const [notFound, setNotFound] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  const {
+    posts,
+    isInitialLoading: isLoadingPosts,
+    isLoadingMore,
+    hasMore,
+    error: postsError,
+    sentinelRef,
+    loadMore,
+    reload: reloadPosts,
+  } = usePaginatedPosts(
+    (page) => adminApi.listUserPosts(handle, { page, limit: POSTS_PAGE_SIZE }).then((res) => res.posts),
+    { auto: false }
+  );
+
   useEffect(() => {
-    Promise.all([adminApi.getUserProfile(handle), adminApi.listUserPosts(handle)])
-      .then(([profileRes, postsRes]) => {
-        setProfile(profileRes.user);
-        setPosts(postsRes.posts);
-      })
+    adminApi
+      .getUserProfile(handle)
+      .then(({ user }) => setProfile(user))
       .catch(() => setNotFound(true))
       .finally(() => setIsLoading(false));
+  }, [handle]);
+
+  useEffect(() => {
+    let cancelled = false;
+    // Deferred a tick rather than called synchronously in the effect body - see
+    // usePaginatedPosts' own mount effect for why.
+    queueMicrotask(() => {
+      if (!cancelled) reloadPosts();
+    });
+    return () => {
+      cancelled = true;
+    };
+    // reloadPosts closes over the latest fetch fn regardless of its own identity (see
+    // usePaginatedPosts) - only a real handle change should restart the list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handle]);
 
   if (isLoading) {
@@ -81,7 +108,9 @@ export default function AdminUserProfilePage() {
         </div>
       </div>
 
-      {posts.length === 0 ? (
+      {isLoadingPosts ? (
+        <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>
+      ) : posts.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
           {profile.handle} hasn&apos;t posted anything.
         </div>
@@ -90,8 +119,32 @@ export default function AdminUserProfilePage() {
           {posts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
+
+          {postsError && (
+            <div className="py-4 text-center">
+              <p className="mb-2 text-sm text-rose-500">{postsError}</p>
+              <button
+                type="button"
+                onClick={loadMore}
+                className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 hover:border-cyan-400 hover:text-cyan-600 dark:border-slate-700 dark:text-slate-300"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          {isLoadingMore && (
+            <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">Loading more...</p>
+          )}
+          {!hasMore && !postsError && (
+            <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
+              That&apos;s everything.
+            </p>
+          )}
         </div>
       )}
+
+      <div ref={sentinelRef} aria-hidden="true" className="h-px" />
     </div>
   );
 }

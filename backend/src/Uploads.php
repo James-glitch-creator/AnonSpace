@@ -66,6 +66,78 @@ final class Uploads
         return $extToMime[$ext] ?? null;
     }
 
+    /**
+     * Serves a saved upload, honoring HTTP Range requests. A plain full-body response
+     * works fine for images (the browser decodes the whole thing regardless), but a
+     * <video>/<audio> element always opens with a Range request and most browsers refuse
+     * to play anything at all if the server doesn't answer with a 206 partial response -
+     * without this, an uploaded video shows a player that never starts.
+     */
+    public static function stream(string $path): void
+    {
+        $size = filesize($path);
+        if ($size === false) {
+            http_response_code(404);
+            return;
+        }
+
+        header('Content-Type: ' . (self::mimeFor($path) ?? 'application/octet-stream'));
+        header('Cache-Control: public, max-age=31536000, immutable');
+        header('Accept-Ranges: bytes');
+
+        $start = 0;
+        $end = $size - 1;
+        $status = 200;
+
+        $range = $_SERVER['HTTP_RANGE'] ?? null;
+        if ($range !== null && preg_match('/^bytes=(\d*)-(\d*)$/', trim($range), $m) === 1) {
+            [$rawStart, $rawEnd] = [$m[1], $m[2]];
+
+            if ($rawStart === '' && $rawEnd !== '') {
+                // Suffix range - "give me the last N bytes".
+                $start = max(0, $size - (int) $rawEnd);
+            } elseif ($rawStart !== '') {
+                $start = (int) $rawStart;
+                if ($rawEnd !== '') {
+                    $end = min((int) $rawEnd, $size - 1);
+                }
+            }
+
+            if ($start > $end || $start >= $size) {
+                header("Content-Range: bytes */{$size}");
+                http_response_code(416);
+                return;
+            }
+
+            $status = 206;
+        }
+
+        $length = $end - $start + 1;
+        http_response_code($status);
+        header("Content-Length: {$length}");
+        if ($status === 206) {
+            header("Content-Range: bytes {$start}-{$end}/{$size}");
+        }
+
+        $handle = fopen($path, 'rb');
+        if ($handle === false) {
+            http_response_code(500);
+            return;
+        }
+
+        fseek($handle, $start);
+        $remaining = $length;
+        while ($remaining > 0 && !feof($handle)) {
+            $chunk = fread($handle, min(8192, $remaining));
+            if ($chunk === false) {
+                break;
+            }
+            echo $chunk;
+            $remaining -= strlen($chunk);
+        }
+        fclose($handle);
+    }
+
     /** Deletes a previously saved upload given its "/uploads/xxx" relative URL. */
     public static function delete(string $relativeUrl): void
     {

@@ -9,6 +9,7 @@ import { EditCommunityModal } from "@/components/edit-community-modal";
 import { ManageMembersModal } from "@/components/manage-members-modal";
 import { PostCard } from "@/components/post-card";
 import { ReportButton } from "@/components/report-button";
+import { POSTS_PAGE_SIZE, usePaginatedPosts } from "@/hooks/use-paginated-posts";
 import { API_BASE_URL, communitiesApi, type Community, type CommunityPostSort, type Post } from "@/lib/api";
 
 const SORT_OPTIONS: { value: CommunityPostSort; label: string }[] = [
@@ -74,7 +75,6 @@ function PinnedPostCard({
 export default function CommunityPage() {
   const { slug } = useParams<{ slug: string }>();
   const [community, setCommunity] = useState<Community | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
   const [pinnedPosts, setPinnedPosts] = useState<Post[]>([]);
   const [highlightsExpanded, setHighlightsExpanded] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -85,8 +85,25 @@ export default function CommunityPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [postQuery, setPostQuery] = useState("");
   const [postSort, setPostSort] = useState<CommunityPostSort>("new");
-  const [isLoadingPosts, setIsLoadingPosts] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const {
+    posts,
+    setPosts,
+    isInitialLoading: isLoadingPosts,
+    isLoadingMore,
+    hasMore,
+    error: postsError,
+    sentinelRef,
+    loadMore,
+    reload: reloadPosts,
+  } = usePaginatedPosts(
+    (page) =>
+      communitiesApi
+        .listPosts(slug, { q: postQuery.trim() || undefined, sort: postSort, page, limit: POSTS_PAGE_SIZE })
+        .then((res) => res.posts),
+    { auto: false }
+  );
 
   useEffect(() => {
     communitiesApi
@@ -99,7 +116,6 @@ export default function CommunityPage() {
             .listPosts(slug, { pinned: true, limit: 4 })
             .then(({ posts }) => setPinnedPosts(posts))
             .catch(() => {});
-          return communitiesApi.listPosts(slug).then((postsRes) => setPosts(postsRes.posts));
         }
       })
       .catch(() => setNotFound(true))
@@ -108,21 +124,20 @@ export default function CommunityPage() {
 
   const canSeePosts = community ? community.visibility === "public" || community.isJoined : false;
 
+  // No debounce on the first load of a given slug (joining/opening a community shouldn't
+  // wait an extra beat to see its posts) - only a search/sort edit after that debounces.
+  const loadedSlugRef = useRef<string | null>(null);
   useEffect(() => {
     if (isLoading || !canSeePosts) return;
 
-    const timeout = setTimeout(() => {
-      setIsLoadingPosts(true);
-      communitiesApi
-        .listPosts(slug, { q: postQuery.trim() || undefined, sort: postSort })
-        .then(({ posts }) => setPosts(posts))
-        .catch(() => {})
-        .finally(() => setIsLoadingPosts(false));
-    }, 300);
-
+    const isNewSlug = loadedSlugRef.current !== slug;
+    loadedSlugRef.current = slug;
+    const timeout = setTimeout(() => reloadPosts(), isNewSlug ? 0 : 300);
     return () => clearTimeout(timeout);
+    // reloadPosts always reads the latest slug/query/sort (see usePaginatedPosts) - it
+    // doesn't need to be a dep itself, only the filters that should restart the list.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug, postQuery, postSort, canSeePosts]);
+  }, [slug, postQuery, postSort, canSeePosts, isLoading]);
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -410,16 +425,42 @@ export default function CommunityPage() {
                   : `No posts yet in ${community.name}.`}
               </div>
             ) : (
-              posts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  onDelete={handlePostDeleted}
-                  canModerate={community.isOwner}
-                  onPinChange={handlePinChange}
-                />
-              ))
+              <>
+                {posts.map((post) => (
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    onDelete={handlePostDeleted}
+                    canModerate={community.isOwner}
+                    onPinChange={handlePinChange}
+                  />
+                ))}
+
+                {postsError && (
+                  <div className="py-4 text-center">
+                    <p className="mb-2 text-sm text-rose-500">{postsError}</p>
+                    <button
+                      type="button"
+                      onClick={loadMore}
+                      className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 hover:border-cyan-400 hover:text-cyan-600 dark:border-slate-700 dark:text-slate-300"
+                    >
+                      Try again
+                    </button>
+                  </div>
+                )}
+
+                {isLoadingMore && (
+                  <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">Loading more...</p>
+                )}
+                {!hasMore && !postsError && (
+                  <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
+                    You&apos;re all caught up.
+                  </p>
+                )}
+              </>
             )}
+
+            <div ref={sentinelRef} aria-hidden="true" className="h-px" />
           </>
         )}
       </main>

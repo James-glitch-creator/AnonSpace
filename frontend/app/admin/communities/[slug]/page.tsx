@@ -2,10 +2,11 @@
 
 import { Lock, Search } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AdminCommunitySidebar } from "@/components/admin/admin-community-sidebar";
 import { PostCard } from "@/components/post-card";
-import { adminApi, API_BASE_URL, type AdminCommunityProfile, type CommunityPostSort, type Post } from "@/lib/api";
+import { POSTS_PAGE_SIZE, usePaginatedPosts } from "@/hooks/use-paginated-posts";
+import { adminApi, API_BASE_URL, type AdminCommunityProfile, type CommunityPostSort } from "@/lib/api";
 
 const SORT_OPTIONS: { value: CommunityPostSort; label: string }[] = [
   { value: "new", label: "Latest to oldest" },
@@ -17,37 +18,48 @@ const SORT_OPTIONS: { value: CommunityPostSort; label: string }[] = [
 export default function AdminCommunityPage() {
   const { slug } = useParams<{ slug: string }>();
   const [community, setCommunity] = useState<AdminCommunityProfile | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
   const [notFound, setNotFound] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [postQuery, setPostQuery] = useState("");
   const [postSort, setPostSort] = useState<CommunityPostSort>("new");
-  const [isLoadingPosts, setIsLoadingPosts] = useState(false);
+
+  const {
+    posts,
+    isInitialLoading: isLoadingPosts,
+    isLoadingMore,
+    hasMore,
+    error: postsError,
+    sentinelRef,
+    loadMore,
+    reload: reloadPosts,
+  } = usePaginatedPosts(
+    (page) =>
+      adminApi
+        .listCommunityPosts(slug, { q: postQuery.trim() || undefined, sort: postSort, page, limit: POSTS_PAGE_SIZE })
+        .then((res) => res.posts),
+    { auto: false }
+  );
 
   useEffect(() => {
-    Promise.all([adminApi.getCommunity(slug), adminApi.listCommunityPosts(slug)])
-      .then(([communityRes, postsRes]) => {
-        setCommunity(communityRes.community);
-        setPosts(postsRes.posts);
-      })
+    adminApi
+      .getCommunity(slug)
+      .then(({ community }) => setCommunity(community))
       .catch(() => setNotFound(true))
       .finally(() => setIsLoading(false));
   }, [slug]);
 
+  // No debounce on the first load of a given slug (an admin landing on the page shouldn't
+  // wait an extra beat to see it) - only a search/sort edit after that debounces.
+  const loadedSlugRef = useRef<string | null>(null);
   useEffect(() => {
-    if (isLoading) return;
-
-    const timeout = setTimeout(() => {
-      setIsLoadingPosts(true);
-      adminApi
-        .listCommunityPosts(slug, { q: postQuery.trim() || undefined, sort: postSort })
-        .then(({ posts }) => setPosts(posts))
-        .catch(() => {})
-        .finally(() => setIsLoadingPosts(false));
-    }, 300);
-
+    const isNewSlug = loadedSlugRef.current !== slug;
+    loadedSlugRef.current = slug;
+    const timeout = setTimeout(() => reloadPosts(), isNewSlug ? 0 : 300);
     return () => clearTimeout(timeout);
-  }, [slug, postQuery, postSort, isLoading]);
+    // reloadPosts always reads the latest slug/query/sort (see usePaginatedPosts) - it
+    // doesn't need to be a dep itself, only the filters that should restart the list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, postQuery, postSort]);
 
   if (isLoading) {
     return <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>;
@@ -132,8 +144,36 @@ export default function AdminCommunityPage() {
             {postQuery.trim() ? `No posts match "${postQuery.trim()}".` : `No posts in ${community.name} yet.`}
           </div>
         ) : (
-          posts.map((post) => <PostCard key={post.id} post={post} />)
+          <>
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+
+            {postsError && (
+              <div className="py-4 text-center">
+                <p className="mb-2 text-sm text-rose-500">{postsError}</p>
+                <button
+                  type="button"
+                  onClick={loadMore}
+                  className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 hover:border-cyan-400 hover:text-cyan-600 dark:border-slate-700 dark:text-slate-300"
+                >
+                  Try again
+                </button>
+              </div>
+            )}
+
+            {isLoadingMore && (
+              <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">Loading more...</p>
+            )}
+            {!hasMore && !postsError && (
+              <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
+                That&apos;s everything.
+              </p>
+            )}
+          </>
         )}
+
+        <div ref={sentinelRef} aria-hidden="true" className="h-px" />
       </main>
 
       <AdminCommunitySidebar
