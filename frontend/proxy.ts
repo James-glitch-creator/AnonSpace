@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const SESSION_COOKIE = "anonspace_token";
-const PUBLIC_ONLY_PATHS = ["/", "/login", "/register"];
+// Anyone may reset their password, including visitors who no longer have a session.
+// The other pages are guest-only entry points and should still redirect authenticated
+// users to the appropriate home page.
+const PUBLIC_PATHS = ["/", "/login", "/register", "/forgot-password"];
+const GUEST_ONLY_PATHS = ["/", "/login", "/register"];
 // Superadmins don't get the regular app UI or the rest of the admin panel - their job is
 // registering/revoking admin accounts, plus Overview, looking up regular accounts and
 // communities since they're still an admin, and their own Settings - so those are the only
@@ -47,7 +51,7 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE)?.value;
 
   if (token === undefined) {
-    if (!PUBLIC_ONLY_PATHS.includes(pathname)) {
+    if (!PUBLIC_PATHS.includes(pathname)) {
       return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();
@@ -55,8 +59,13 @@ export function proxy(request: NextRequest) {
 
   const role = roleFromToken(token);
 
-  if (PUBLIC_ONLY_PATHS.includes(pathname)) {
+  if (GUEST_ONLY_PATHS.includes(pathname)) {
     return NextResponse.redirect(new URL(homeFor(role), request.url));
+  }
+
+  // Keep password recovery available from Settings, even for admin accounts.
+  if (PUBLIC_PATHS.includes(pathname)) {
+    return NextResponse.next();
   }
 
   const onSuperAdminHome = pathname === SUPERADMIN_HOME || pathname.startsWith(`${SUPERADMIN_HOME}/`);
