@@ -91,3 +91,26 @@ error page.
 Copy `frontend/.env.example` to `frontend/.env.local` only if your API is not on the
 default `http://localhost:8000`. Copy `backend/.env.example` to `backend/.env` and fill
 in local secrets. Keep `COOKIE_DOMAIN` empty locally.
+
+## Railway backend deployment
+
+The backend includes a `Dockerfile` that Railway detects when its service Root Directory
+is set to `backend`. It installs PHP's MongoDB extension and configures Apache routing.
+
+1. Create a Railway project and deploy this Git repository. Set the service **Root
+   Directory** to `backend`.
+2. In the service **Variables**, add the production backend variables shown above. Do
+   not add an `.env` file to Git.
+3. Under **Volumes**, add a volume mounted at `/var/www/html/uploads`. Under **Deploy**,
+   set the start command to:
+
+   ```sh
+   sh -c 'chown -R www-data:www-data /var/www/html/uploads && apache2-foreground'
+   ```
+
+4. Under **Networking**, add the custom domain `api.anonspace4.com`. Railway supplies
+   a CNAME target; create the matching `api` CNAME in Cloudflare with proxying disabled
+   until Railway marks the domain active.
+5. Railway has no fixed outbound IP on its standard service. In MongoDB Atlas, allow
+   `0.0.0.0/0` in Network Access only if necessary, use a strong database password,
+   and grant that database user access only to the `anonspace` database.
