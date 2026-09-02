@@ -10,7 +10,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends $PHPIZE_DEPS libssl-dev \
     && pecl install mongodb \
     && docker-php-ext-enable mongodb \
-    && a2enmod rewrite \
+    && a2dismod mpm_event mpm_worker \
+    && a2enmod mpm_prefork rewrite \
     && sed -ri 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf \
     && rm -rf /var/lib/apt/lists/*
 
