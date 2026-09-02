@@ -12,6 +12,8 @@ RUN apt-get update \
     && docker-php-ext-enable mongodb \
     && a2dismod mpm_event mpm_worker \
     && a2enmod mpm_prefork rewrite \
+    && ! test -e /etc/apache2/mods-enabled/mpm_event.load \
+    && ! test -e /etc/apache2/mods-enabled/mpm_worker.load \
     && sed -ri 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf \
     && rm -rf /var/lib/apt/lists/*
 
