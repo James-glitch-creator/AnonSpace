@@ -1,6 +1,7 @@
 # Node modules
 frontend/node_modules/
 frontend/.next/
+frontend/.vercel/
 
 # PHP/Composer
 backend/vendor/

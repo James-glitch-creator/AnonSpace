@@ -31,25 +31,32 @@ final class Auth
             (int) Env::get('JWT_TTL', '604800')
         );
 
-        setcookie(self::COOKIE_NAME, $token, [
+        $options = [
             'expires' => time() + (int) Env::get('JWT_TTL', '604800'),
             'path' => '/',
             'httponly' => true,
             'samesite' => 'Lax',
             'secure' => (Env::get('APP_ENV', 'development') === 'production'),
-        ]);
+        ];
+        self::addCookieDomain($options);
+
+        setcookie(self::COOKIE_NAME, $token, $options);
 
         return $token;
     }
 
     public static function clearSession(): void
     {
-        setcookie(self::COOKIE_NAME, '', [
+        $options = [
             'expires' => time() - 3600,
             'path' => '/',
             'httponly' => true,
             'samesite' => 'Lax',
-        ]);
+            'secure' => (Env::get('APP_ENV', 'development') === 'production'),
+        ];
+        self::addCookieDomain($options);
+
+        setcookie(self::COOKIE_NAME, '', $options);
     }
 
     /** Returns the authenticated user document, or null if there is no valid session. */
@@ -157,5 +164,18 @@ final class Auth
         }
 
         return null;
+    }
+
+    /**
+     * Makes the session available to the Vercel frontend and API only when both use
+     * subdomains of the same custom domain, e.g. app.example.com + api.example.com.
+     * Leave COOKIE_DOMAIN empty for local development and provider preview URLs.
+     */
+    private static function addCookieDomain(array &$options): void
+    {
+        $domain = trim(Env::get('COOKIE_DOMAIN', '') ?? '');
+        if ($domain !== '') {
+            $options['domain'] = $domain;
+        }
     }
 }
