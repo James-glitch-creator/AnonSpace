@@ -12,7 +12,7 @@ RUN apt-get update \
     && docker-php-ext-enable mongodb \
     && rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf \
     && a2enmod mpm_prefork rewrite \
-    && test "$(apache2ctl -M 2>/dev/null | grep -c '_mpm_')" -eq 1 \
+    && test "$(apache2ctl -M 2>/dev/null | grep -c 'mpm_.*_module')" -eq 1 \
     && sed -ri 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf \
     && rm -rf /var/lib/apt/lists/*
 
