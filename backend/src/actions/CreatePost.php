@@ -72,6 +72,25 @@ final class CreatePost
             Response::error('Post body must be between 1 and 4000 characters', 422);
         }
 
+        // "public" is the app's implicit default destination rather than a
+        // user-created community. Ensure it exists in fresh production databases
+        // without requiring the development database-initialization script.
+        if ($communitySlug === 'public') {
+            Database::communities()->updateOne(
+                ['slug' => 'public'],
+                ['$setOnInsert' => [
+                    'name' => 'Public',
+                    'topic' => 'General discussion for everyone',
+                    'visibility' => 'public',
+                    'status' => 'active',
+                    'memberCount' => 0,
+                    'color' => 'bg-slate-500',
+                    'createdAt' => new UTCDateTime(),
+                ]],
+                ['upsert' => true]
+            );
+        }
+
         $community = Database::communities()->findOne(['slug' => $communitySlug]);
         if ($community === null || ($community['status'] ?? 'active') === 'banned') {
             Response::error('Community not found', 404);
