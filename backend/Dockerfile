@@ -7,7 +7,8 @@ RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interacti
 FROM php:8.3-apache
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends $PHPIZE_DEPS libssl-dev \
+    && apt-get install -y --no-install-recommends $PHPIZE_DEPS libssl-dev libcurl4-openssl-dev \
+    && docker-php-ext-install curl \
     && pecl install mongodb \
     && docker-php-ext-enable mongodb \
     && rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf \

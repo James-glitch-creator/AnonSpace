@@ -5,7 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use App\Env;
-use PHPMailer\PHPMailer\PHPMailer;
+use App\Mailer;
 
 Env::load(__DIR__ . '/../.env');
 
@@ -15,26 +15,10 @@ if ($to === null) {
     exit(1);
 }
 
-$mail = new PHPMailer(true);
-$mail->SMTPDebug = 2;
-$mail->Debugoutput = 'echo';
-$mail->isSMTP();
-$mail->Host = Env::get('SMTP_HOST', 'smtp.gmail.com');
-$mail->SMTPAuth = true;
-$mail->Username = Env::get('SMTP_USERNAME', '');
-$mail->Password = Env::get('SMTP_PASSWORD', '');
-$mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-$mail->Port = (int) Env::get('SMTP_PORT', '587');
-$mail->Timeout = 15;
-
-$mail->setFrom(Env::get('SMTP_FROM_EMAIL', ''), Env::get('SMTP_FROM_NAME', 'AnonSpace'));
-$mail->addAddress($to);
-$mail->Subject = 'AnonSpace debug test';
-$mail->Body = 'This is a plain debug test email.';
-
-try {
-    $mail->send();
+if (Mailer::sendOtp($to, '123456')) {
     echo "\nRESULT: sent successfully\n";
-} catch (\Throwable $e) {
-    echo "\nRESULT: FAILED - {$e->getMessage()}\n";
+    exit(0);
 }
+
+echo "\nRESULT: FAILED - check the application logs for the Resend response\n";
+exit(1);
