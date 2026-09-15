@@ -4,7 +4,7 @@ const THEME_INIT_SCRIPT = `
     var stored = localStorage.getItem("anonspace-theme");
     var theme = stored === "light" || stored === "dark"
       ? stored
-      : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      : "dark";
     document.documentElement.classList.toggle("dark", theme === "dark");
   } catch (e) {}
 })();
@@ -13,7 +13,7 @@ const THEME_INIT_SCRIPT = `
 export function ThemeScript() {
   return (
     <script
-      type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
+      id="anonspace-theme-init"
       suppressHydrationWarning
       dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
     />

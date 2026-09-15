@@ -8,7 +8,18 @@ const STORAGE_KEY = "anonspace-theme";
 function subscribe(callback: () => void) {
   const observer = new MutationObserver(callback);
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-  return () => observer.disconnect();
+
+  function handleStorage(event: StorageEvent) {
+    if (event.key !== STORAGE_KEY || (event.newValue !== "dark" && event.newValue !== "light")) return;
+    document.documentElement.classList.toggle("dark", event.newValue === "dark");
+    callback();
+  }
+
+  window.addEventListener("storage", handleStorage);
+  return () => {
+    observer.disconnect();
+    window.removeEventListener("storage", handleStorage);
+  };
 }
 
 function getSnapshot() {
