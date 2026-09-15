@@ -4,6 +4,7 @@ import { Lock, ShieldCheck, VenetianMask } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import PasswordInput from "@/components/password-input";
 import { ApiError, authApi } from "@/lib/api";
 
 type Step = "email" | "otp" | "password";
@@ -18,10 +19,13 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
 
   async function handleRequestOtp(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setResendMessage(null);
     setIsSubmitting(true);
     try {
       await authApi.requestSignupOtp(email);
@@ -45,6 +49,21 @@ export default function RegisterPage() {
       setError(err instanceof ApiError ? err.message : "Something went wrong.");
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleResendOtp() {
+    setError(null);
+    setResendMessage(null);
+    setIsResending(true);
+    try {
+      await authApi.requestSignupOtp(email);
+      setCode("");
+      setResendMessage("A new verification code was sent.");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong.");
+    } finally {
+      setIsResending(false);
     }
   }
 
@@ -121,7 +140,6 @@ export default function RegisterPage() {
                 </div>
 
                 {error && <p className="text-xs font-medium text-red-400">{error}</p>}
-
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -158,10 +176,15 @@ export default function RegisterPage() {
                 </div>
 
                 {error && <p className="text-xs font-medium text-red-400">{error}</p>}
+                {resendMessage && (
+                  <p role="status" className="text-xs font-medium text-emerald-400">
+                    {resendMessage}
+                  </p>
+                )}
 
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isResending}
                   className="w-full rounded-full bg-cyan-500 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSubmitting ? "Verifying..." : "Verify Code"}
@@ -169,8 +192,18 @@ export default function RegisterPage() {
 
                 <button
                   type="button"
+                  onClick={handleResendOtp}
+                  disabled={isSubmitting || isResending}
+                  className="w-full text-center text-xs font-semibold text-cyan-400 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isResending ? "Resending code..." : "Resend code"}
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => {
                     setError(null);
+                    setResendMessage(null);
                     setCode("");
                     setStep("email");
                   }}
@@ -194,8 +227,7 @@ export default function RegisterPage() {
                   <label className="mb-1 block text-xs font-medium text-slate-400">
                     Password
                   </label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     required
                     minLength={8}
                     value={password}
@@ -209,8 +241,7 @@ export default function RegisterPage() {
                   <label className="mb-1 block text-xs font-medium text-slate-400">
                     Confirm Password
                   </label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     required
                     minLength={8}
                     value={confirmPassword}

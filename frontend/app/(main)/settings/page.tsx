@@ -3,6 +3,7 @@
 import { Ban, Flag, LogOut, Moon, RefreshCw, ShieldCheck, ShieldX, Sun, UserX } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import PasswordInput from "@/components/password-input";
 import {
   ApiError,
   authApi,
@@ -172,8 +173,7 @@ function PasswordCard({ email }: { email?: string }) {
           <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
             Current password
           </label>
-          <input
-            type="password"
+          <PasswordInput
             required
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
@@ -184,8 +184,7 @@ function PasswordCard({ email }: { email?: string }) {
           <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
             New password
           </label>
-          <input
-            type="password"
+          <PasswordInput
             required
             placeholder="At least 8 characters"
             value={newPassword}
@@ -197,8 +196,7 @@ function PasswordCard({ email }: { email?: string }) {
           <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
             Confirm new password
           </label>
-          <input
-            type="password"
+          <PasswordInput
             required
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}

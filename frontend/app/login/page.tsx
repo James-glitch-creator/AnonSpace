@@ -4,6 +4,7 @@ import { Lock, ShieldCheck, VenetianMask } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import PasswordInput from "@/components/password-input";
 import { ApiError, authApi } from "@/lib/api";
 
 export default function LoginPage() {
@@ -82,8 +83,7 @@ export default function LoginPage() {
                   Forgot password?
                 </Link>
               </div>
-              <input
-                type="password"
+              <PasswordInput
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
