@@ -8,7 +8,7 @@ use App\Response;
 
 final class UpdateNotificationPreferences
 {
-    private const TYPES = ['reported', 'content_banned', 'report_approved', 'report_dismissed'];
+    private const TYPES = ['post_commented', 'reported', 'content_banned', 'report_approved', 'report_dismissed'];
 
     public static function handle(array $body): never
     {

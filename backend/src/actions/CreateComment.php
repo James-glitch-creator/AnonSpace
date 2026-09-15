@@ -7,6 +7,7 @@ use App\CommentView;
 use App\Communities;
 use App\Database;
 use App\Ids;
+use App\Notifications;
 use App\Response;
 use MongoDB\BSON\UTCDateTime;
 
@@ -65,6 +66,16 @@ final class CreateComment
         ]);
 
         Database::posts()->updateOne(['_id' => $postObjectId], ['$inc' => ['commentCount' => 1]]);
+
+        if ((string) $post['authorId'] !== (string) $user['_id']) {
+            Notifications::create(
+                $post['authorId'],
+                'post_commented',
+                "{$user['handle']} commented on your post.",
+                'post',
+                $postObjectId
+            );
+        }
 
         $comment = Database::comments()->findOne(['_id' => $result->getInsertedId()]);
         Response::ok(['comment' => CommentView::render((array) $comment, null)], 201);

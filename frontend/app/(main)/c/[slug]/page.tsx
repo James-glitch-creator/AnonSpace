@@ -244,13 +244,15 @@ export default function CommunityPage() {
               </div>
 
               <div className="flex items-center gap-2 pb-1">
-                <Link
-                  href={`/submit?c=${community.slug}`}
-                  className="flex items-center gap-1.5 rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Create Post
-                </Link>
+                {(community.slug === "public" || community.isJoined) && (
+                  <Link
+                    href={`/submit?c=${community.slug}`}
+                    className="flex items-center gap-1.5 rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Create Post
+                  </Link>
+                )}
 
                 {/* "public" is the implicit default posting destination, not a real
                     user-created community — there's nothing to join, own, or report here. */}

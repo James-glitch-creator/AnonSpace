@@ -20,8 +20,10 @@ function SubmitPostPageInner() {
   // instead of landing on Public and making the person pick it again from the list.
   const prefillSlug = searchParams.get("c");
 
-  const [communitySlug, setCommunitySlug] = useState(prefillSlug || PUBLIC_SLUG);
-  const [communityLabel, setCommunityLabel] = useState(prefillSlug ? prefillSlug : "Public");
+  // Start safely on Public; a deep-linked community is selected only after the API
+  // confirms this user has joined it.
+  const [communitySlug, setCommunitySlug] = useState(PUBLIC_SLUG);
+  const [communityLabel, setCommunityLabel] = useState("Public");
   const [communityColor, setCommunityColor] = useState("bg-slate-500");
   const [joinedCommunities, setJoinedCommunities] = useState<Community[]>([]);
   const [isPicking, setIsPicking] = useState(false);
@@ -53,11 +55,22 @@ function SubmitPostPageInner() {
       communitiesApi
         .get(prefillSlug)
         .then(({ community }) => {
-          setCommunitySlug(community.slug);
-          setCommunityLabel(community.name);
-          setCommunityColor(community.color);
+          if (community.isJoined) {
+            setCommunitySlug(community.slug);
+            setCommunityLabel(community.name);
+            setCommunityColor(community.color);
+          } else {
+            setCommunitySlug(PUBLIC_SLUG);
+            setCommunityLabel("Public");
+            setCommunityColor("bg-slate-500");
+            setError("Join that community before posting in it.");
+          }
         })
-        .catch(() => {});
+        .catch(() => {
+          setCommunitySlug(PUBLIC_SLUG);
+          setCommunityLabel("Public");
+          setCommunityColor("bg-slate-500");
+        });
     }
     // Only ever meant to run once, from whatever ?c= the page was opened with.
     // eslint-disable-next-line react-hooks/exhaustive-deps

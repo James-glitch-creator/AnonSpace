@@ -1,12 +1,13 @@
 "use client";
 
-import { Ban, Building2, Check, CheckCheck, Flag, ShieldCheck, ShieldX, UserX } from "lucide-react";
+import { Ban, Building2, Check, CheckCheck, Flag, MessageCircle, ShieldCheck, ShieldX, UserX } from "lucide-react";
 import { useEffect, useState } from "react";
 import { RightRail } from "@/components/right-rail";
 import { notificationsApi, type Notification, type NotificationType } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/format";
 
 const ICONS: Record<NotificationType, React.ComponentType<{ className?: string }>> = {
+  post_commented: MessageCircle,
   reported: Flag,
   content_banned: Ban,
   account_banned: UserX,
@@ -62,7 +63,7 @@ export default function NotificationsPage() {
             <p className="py-10 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>
           ) : notifications.length === 0 ? (
             <p className="px-4 py-10 text-center text-sm text-slate-400 dark:text-slate-500">
-              Nothing yet — reports and moderation updates will show up here.
+              Nothing yet — comments, reports, and moderation updates will show up here.
             </p>
           ) : (
             notifications.map((n) => {

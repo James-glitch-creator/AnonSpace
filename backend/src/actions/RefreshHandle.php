@@ -11,8 +11,8 @@ use MongoDB\BSON\UTCDateTime;
 
 final class RefreshHandle
 {
-    /** How often an account may roll a new anonymous name. */
-    private const COOLDOWN = '+6 months';
+    /** Fixed account-age interval at which another name refresh becomes available. */
+    private const INTERVAL = '+6 months';
 
     public static function handle(): never
     {
@@ -21,17 +21,20 @@ final class RefreshHandle
         // there's nothing here for them to refresh.
         Auth::assertNotModerator($user, 'refresh their handle');
 
-        $lastChanged = $user['handleChangedAt'] ?? null;
-        if ($lastChanged !== null) {
-            $nextEligible = $lastChanged->toDateTime()->modify(self::COOLDOWN);
-            $now = new DateTimeImmutable();
-            if ($now < $nextEligible) {
-                Response::error(
-                    'You can only refresh your anonymous name once every 6 months.',
-                    429,
-                    ['nextEligibleAt' => $nextEligible->format(DATE_ATOM)]
-                );
-            }
+        $now = new DateTimeImmutable();
+        [$windowStartedAt, $nextEligible] = self::refreshWindow($user, $now);
+        $lastChanged = isset($user['handleChangedAt'])
+            ? DateTimeImmutable::createFromInterface($user['handleChangedAt']->toDateTime())
+            : null;
+
+        if ($now < $windowStartedAt || ($lastChanged !== null && $lastChanged >= $windowStartedAt)) {
+            Response::error(
+                'You can refresh your anonymous name once every 6 months after creating your account.',
+                429,
+                ['nextEligibleAt' => $now < $windowStartedAt
+                    ? $windowStartedAt->format(DATE_ATOM)
+                    : $nextEligible->format(DATE_ATOM)],
+            );
         }
 
         $users = Database::users();
@@ -45,7 +48,34 @@ final class RefreshHandle
 
         Response::ok([
             'handle' => $newHandle,
-            'nextEligibleAt' => $now->toDateTime()->modify(self::COOLDOWN)->format(DATE_ATOM),
+            'nextEligibleAt' => $nextEligible->format(DATE_ATOM),
         ]);
+    }
+
+    /**
+     * Returns the start of the current six-month account-age window and the next one.
+     * The schedule stays anchored to account creation rather than drifting when a user
+     * waits before using an available refresh.
+     *
+     * @return array{DateTimeImmutable, DateTimeImmutable}
+     */
+    private static function refreshWindow(array $user, DateTimeImmutable $now): array
+    {
+        $createdAt = DateTimeImmutable::createFromInterface($user['createdAt']->toDateTime());
+        $windowStartedAt = $createdAt->modify(self::INTERVAL);
+
+        if ($now < $windowStartedAt) {
+            return [$windowStartedAt, $windowStartedAt->modify(self::INTERVAL)];
+        }
+
+        $intervalNumber = 1;
+        $nextEligible = $createdAt->modify('+12 months');
+        while ($now >= $nextEligible) {
+            $intervalNumber++;
+            $windowStartedAt = $nextEligible;
+            $nextEligible = $createdAt->modify('+' . (($intervalNumber + 1) * 6) . ' months');
+        }
+
+        return [$windowStartedAt, $nextEligible];
     }
 }

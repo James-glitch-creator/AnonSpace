@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, Flag, LogOut, Moon, RefreshCw, ShieldCheck, ShieldX, Sun, UserX } from "lucide-react";
+import { Ban, Flag, LogOut, MessageCircle, Moon, RefreshCw, ShieldCheck, ShieldX, Sun, UserX } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import PasswordInput from "@/components/password-input";
@@ -18,6 +18,7 @@ import { formatRelativeTime } from "@/lib/format";
 import { setTheme, useIsDarkTheme } from "@/components/theme-toggle";
 
 const NOTIFICATION_TYPES: { type: NotificationType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { type: "post_commented", label: "Someone comments on my post", icon: MessageCircle },
   { type: "reported", label: "Someone reports my post, comment, or account", icon: Flag },
   { type: "content_banned", label: "My post or comment gets banned", icon: Ban },
   { type: "account_banned", label: "My account gets banned", icon: UserX },
@@ -35,11 +36,30 @@ function Card({ title, subtitle, children }: { title: string; subtitle?: string;
   );
 }
 
-function eligibleAfter(handleChangedAt: string | null): string | null {
-  if (!handleChangedAt) return null;
-  const next = new Date(handleChangedAt);
-  next.setMonth(next.getMonth() + 6);
-  return next.toISOString();
+function nextHandleRefreshAt(createdAt: string | null, handleChangedAt: string | null): string | null {
+  if (!createdAt) return null;
+
+  const now = new Date();
+  const created = new Date(createdAt);
+  const boundary = (intervalNumber: number) => {
+    const date = new Date(created);
+    date.setUTCMonth(created.getUTCMonth() + intervalNumber * 6);
+    return date;
+  };
+  let intervalNumber = 1;
+  let windowStartedAt = boundary(intervalNumber);
+
+  if (now < windowStartedAt) return windowStartedAt.toISOString();
+
+  let nextWindow = boundary(intervalNumber + 1);
+  while (now >= nextWindow) {
+    intervalNumber++;
+    windowStartedAt = nextWindow;
+    nextWindow = boundary(intervalNumber + 1);
+  }
+
+  if (!handleChangedAt || new Date(handleChangedAt) < windowStartedAt) return null;
+  return nextWindow.toISOString();
 }
 
 function AppearanceCard() {
@@ -74,7 +94,7 @@ function AccountCard({ user, onHandleChange }: { user: PublicUser; onHandleChang
   // null means "derive from the user prop"; only set once the refresh call itself returns a
   // fresher date, so a change here doesn't need to round-trip through the parent's user object.
   const [refreshedEligibleAt, setRefreshedEligibleAt] = useState<string | null>(null);
-  const nextEligibleAt = refreshedEligibleAt ?? eligibleAfter(user.handleChangedAt);
+  const nextEligibleAt = refreshedEligibleAt ?? nextHandleRefreshAt(user.createdAt, user.handleChangedAt);
 
   const isEligible = !nextEligibleAt || new Date(nextEligibleAt) <= new Date();
 
@@ -116,8 +136,8 @@ function AccountCard({ user, onHandleChange }: { user: PublicUser; onHandleChang
         </div>
         {!isEligible && nextEligibleAt && (
           <p className="px-1 text-[11px] text-slate-400 dark:text-slate-500">
-            You can refresh your name again on {new Date(nextEligibleAt).toLocaleDateString()} — once every 6
-            months.
+            You can refresh your name on {new Date(nextEligibleAt).toLocaleDateString()} — every 6 months from
+            the date you created your account.
           </p>
         )}
         {error && <p className="px-1 text-xs font-medium text-red-500">{error}</p>}

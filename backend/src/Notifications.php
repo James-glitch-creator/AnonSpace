@@ -14,7 +14,7 @@ final class Notifications
     }
 
     /**
-     * @param 'reported'|'content_banned'|'account_banned'|'community_banned'|'report_approved'|'report_dismissed' $type
+     * @param 'post_commented'|'reported'|'content_banned'|'account_banned'|'community_banned'|'report_approved'|'report_dismissed' $type
      * @param 'post'|'comment'|'community'|'user'|null $targetType
      */
     public static function create(

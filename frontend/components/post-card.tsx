@@ -4,6 +4,7 @@ import {
   ArrowBigDown,
   ArrowBigUp,
   Bookmark,
+  CheckCircle2,
   MessageSquare,
   MoreVertical,
   Pin,
@@ -32,6 +33,7 @@ const PREVIEW_MAX_WORDS_PER_LINE = 40;
 // unbroken run of characters (no spaces at all) still counts as a single word, so on its
 // own a word cap wouldn't shorten it. Any individual word gets hard-capped too.
 const PREVIEW_MAX_WORD_CHARS = 60;
+const SAVE_TOAST_MS = 3000;
 
 function truncateLine(line: string): { text: string; isTruncated: boolean } {
   const words = line.split(/\s+/).filter(Boolean);
@@ -90,6 +92,7 @@ export function PostCard({
   const [isMod, setIsMod] = useState(false);
   const [isSaved, setIsSaved] = useState(post.isSaved);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveToast, setSaveToast] = useState<string | null>(null);
   const [isPinned, setIsPinned] = useState(post.isPinned);
   const [isPinning, setIsPinning] = useState(false);
   const [pinError, setPinError] = useState<string | null>(null);
@@ -110,6 +113,12 @@ export function PostCard({
     const timeout = setTimeout(() => setJustReposted(false), 2000);
     return () => clearTimeout(timeout);
   }, [justReposted]);
+
+  useEffect(() => {
+    if (!saveToast) return;
+    const timeout = setTimeout(() => setSaveToast(null), SAVE_TOAST_MS);
+    return () => clearTimeout(timeout);
+  }, [saveToast]);
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -133,6 +142,7 @@ export function PostCard({
     try {
       const result = await postsApi.toggleSave(post.id);
       setIsSaved(result.isSaved);
+      setSaveToast(result.isSaved ? "Post saved" : "Post removed from saved posts");
     } catch {
       // Leave saved state as-is on failure.
     } finally {
@@ -478,6 +488,17 @@ export function PostCard({
             setJustReposted(true);
           }}
         />
+      )}
+
+      {saveToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-20 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-lg sm:bottom-6 dark:border-emerald-900 dark:bg-slate-900 dark:text-slate-200"
+        >
+          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          {saveToast}
+        </div>
       )}
     </article>
   );

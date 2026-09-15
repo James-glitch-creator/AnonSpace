@@ -506,6 +506,7 @@ export const usersApi = {
 };
 
 export type NotificationType =
+  | "post_commented"
   | "reported"
   | "content_banned"
   | "account_banned"

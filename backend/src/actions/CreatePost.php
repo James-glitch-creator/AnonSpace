@@ -96,6 +96,10 @@ final class CreatePost
             Response::error('Community not found', 404);
         }
 
+        if ($communitySlug !== 'public' && !Communities::isJoined($user['_id'], $community['_id'])) {
+            Response::error('Join this community before posting in it', 403);
+        }
+
         $hasPhotos = isset($files['photos']) && Uploads::hasUpload($files['photos']);
         $hasVideo = isset($files['video']) && Uploads::hasUpload($files['video']);
 

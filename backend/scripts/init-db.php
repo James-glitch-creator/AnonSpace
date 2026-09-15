@@ -53,13 +53,14 @@ ensureCollection($db, 'users', [
         'status' => ['enum' => ['active', 'banned']],
         'createdAt' => ['bsonType' => 'date'],
         // Set the first time this account rolls a new anonymous name; gates the
-        // once-every-6-months cooldown in RefreshHandle. Absent = never refreshed yet.
+        // Records use of the current account-age refresh window. The window schedule
+        // itself stays anchored to createdAt in RefreshHandle. Absent = never refreshed.
         'handleChangedAt' => ['bsonType' => 'date'],
         'mutedNotificationTypes' => [
             'bsonType' => 'array',
             'items' => [
                 'enum' => [
-                    'reported', 'content_banned', 'account_banned', 'report_approved', 'report_dismissed',
+                    'post_commented', 'reported', 'content_banned', 'account_banned', 'report_approved', 'report_dismissed',
                 ],
             ],
         ],
@@ -267,7 +268,7 @@ ensureCollection($db, 'notifications', [
     'properties' => [
         'userId' => ['bsonType' => 'objectId'],
         'type' => [
-            'enum' => ['reported', 'content_banned', 'account_banned', 'report_approved', 'report_dismissed'],
+            'enum' => ['post_commented', 'reported', 'content_banned', 'account_banned', 'report_approved', 'report_dismissed'],
         ],
         'message' => ['bsonType' => 'string'],
         'targetType' => ['bsonType' => ['string', 'null']],
