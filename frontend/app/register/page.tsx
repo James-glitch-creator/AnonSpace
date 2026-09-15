@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import PasswordInput from "@/components/password-input";
+import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 import { ApiError, authApi } from "@/lib/api";
 
 type Step = "email" | "otp" | "password";
@@ -21,6 +22,7 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const { secondsRemaining: resendCooldown, startCooldown: startResendCooldown } = useResendCooldown();
 
   async function handleRequestOtp(e: FormEvent) {
     e.preventDefault();
@@ -29,6 +31,7 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     try {
       await authApi.requestSignupOtp(email);
+      startResendCooldown();
       setStep("otp");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong.");
@@ -58,6 +61,7 @@ export default function RegisterPage() {
     setIsResending(true);
     try {
       await authApi.requestSignupOtp(email);
+      startResendCooldown();
       setCode("");
       setResendMessage("A new verification code was sent.");
     } catch (err) {
@@ -193,10 +197,14 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={handleResendOtp}
-                  disabled={isSubmitting || isResending}
+                  disabled={isSubmitting || isResending || resendCooldown > 0}
                   className="w-full text-center text-xs font-semibold text-cyan-400 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isResending ? "Resending code..." : "Resend code"}
+                  {isResending
+                    ? "Resending code..."
+                    : resendCooldown > 0
+                      ? `Resend code in ${resendCooldown}s`
+                      : "Resend code"}
                 </button>
 
                 <button

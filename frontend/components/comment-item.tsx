@@ -7,6 +7,7 @@ import {
   ChevronUp,
   MoreVertical,
   Reply as ReplyIcon,
+  Trash2,
   VenetianMask,
 } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
@@ -24,17 +25,21 @@ export function CommentItem({
   childrenById,
   depth = 0,
   onReplyAdded,
+  onDeleted,
 }: {
   comment: Comment;
   postId: string;
   childrenById: Map<string, Comment[]>;
   depth?: number;
   onReplyAdded: (comment: Comment) => void;
+  onDeleted: (id: string, parentId: string | null) => void;
 }) {
   const [upvotes, setUpvotes] = useState(comment.upvotes);
   const [downvotes, setDownvotes] = useState(comment.downvotes);
   const [myVote, setMyVote] = useState(comment.myVote);
   const [isVoting, setIsVoting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isOwnComment, setIsOwnComment] = useState(false);
   const [isMod, setIsMod] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -99,6 +104,19 @@ export function CommentItem({
       setReplyError(err instanceof ApiError ? err.message : "Something went wrong.");
     } finally {
       setIsSubmittingReply(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (isDeleting || !window.confirm("Delete this comment? This can't be undone.")) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const result = await commentsApi.delete(comment.id);
+      onDeleted(comment.id, result.parentId);
+    } catch (err) {
+      setDeleteError(err instanceof ApiError ? err.message : "Something went wrong.");
+      setIsDeleting(false);
     }
   }
 
@@ -208,6 +226,19 @@ export function CommentItem({
           Reply
         </button>
 
+        {isOwnComment && !isMod && (
+          <button
+            type="button"
+            aria-label="Delete comment"
+            title="Delete comment"
+            disabled={isDeleting}
+            onClick={handleDelete}
+            className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition-all duration-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
+
         {isMod && (
           <BanButton targetType="comment" targetId={comment.id} targetLabel={comment.body} variant="icon" />
         )}
@@ -241,6 +272,8 @@ export function CommentItem({
           </div>
         )}
       </div>
+
+      {deleteError && <p className="mt-1 pl-9 text-xs font-medium text-red-500">{deleteError}</p>}
 
       {isReplying && (
         <form onSubmit={handleReply} className="mt-2 space-y-2 pl-9">
@@ -282,6 +315,7 @@ export function CommentItem({
               childrenById={childrenById}
               depth={depth + 1}
               onReplyAdded={onReplyAdded}
+              onDeleted={onDeleted}
             />
           ))}
 

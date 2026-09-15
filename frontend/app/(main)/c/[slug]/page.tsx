@@ -215,8 +215,8 @@ export default function CommunityPage() {
   return (
     <>
       <main className="col-span-1 space-y-4">
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className={`h-28 sm:h-40 ${community.bannerUrl ? "" : community.color}`}>
+        <div className="overflow-visible rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className={`h-28 overflow-hidden rounded-t-2xl sm:h-40 ${community.bannerUrl ? "" : community.color}`}>
             {community.bannerUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={`${API_BASE_URL}${community.bannerUrl}`} alt="" className="h-full w-full object-cover" />
@@ -284,7 +284,7 @@ export default function CommunityPage() {
                       </button>
 
                       {isMenuOpen && (
-                        <div className="absolute right-0 top-full z-10 mt-1 w-48 space-y-0.5 rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-800 dark:bg-slate-900">
+                        <div className="absolute right-0 top-full z-50 mt-1 w-48 space-y-0.5 rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-800 dark:bg-slate-900">
                           {community.isOwner ? (
                             <>
                               <button

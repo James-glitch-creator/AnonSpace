@@ -335,6 +335,11 @@ export const postsApi = {
 };
 
 export const commentsApi = {
+  delete: (id: string) =>
+    request<{ success: true; deleted: true; parentId: string | null }>(`/api/comments/${id}`, {
+      method: "DELETE",
+    }),
+
   vote: (id: string, direction: Vote) =>
     request<VoteResult>(`/api/comments/${id}/vote`, {
       method: "POST",

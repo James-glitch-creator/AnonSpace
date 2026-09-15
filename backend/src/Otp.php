@@ -9,10 +9,33 @@ final class Otp
 {
     private const TTL_SECONDS = 600;
     private const MAX_ATTEMPTS = 5;
+    private const RESEND_COOLDOWN_SECONDS = 30;
 
     public static function collection(): Collection
     {
         return Database::connection()->selectCollection('otp_codes');
+    }
+
+    /** Seconds remaining before another code may be issued for this email. */
+    public static function resendWaitSeconds(string $email): int
+    {
+        $record = self::collection()->findOne(
+            ['email' => $email],
+            ['projection' => ['createdAt' => 1]]
+        );
+
+        if ($record === null || !isset($record['createdAt'])) {
+            return 0;
+        }
+
+        $elapsed = time() - $record['createdAt']->toDateTime()->getTimestamp();
+        return max(0, self::RESEND_COOLDOWN_SECONDS - $elapsed);
+    }
+
+    /** Removes an issued code when delivery fails, allowing an immediate retry. */
+    public static function discard(string $email): void
+    {
+        self::collection()->deleteMany(['email' => $email]);
     }
 
     /** Issues a fresh 6-digit code for the email, invalidating any previous one. */

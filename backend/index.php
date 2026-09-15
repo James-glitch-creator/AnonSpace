@@ -19,6 +19,7 @@ use App\Actions\CreateComment;
 use App\Actions\CreateCommunity;
 use App\Actions\CreatePost;
 use App\Actions\DeletePost;
+use App\Actions\DeleteComment;
 use App\Actions\GetCommunity;
 use App\Actions\GetPost;
 use App\Actions\GetUserProfile;
@@ -151,6 +152,7 @@ $router->add('GET', '/api/posts/{id}/comments', fn($p) => ListComments::handle($
 $router->add('POST', '/api/posts/{id}/comments', fn($p) => CreateComment::handle($p['id'], jsonBody()));
 
 // Comments
+$router->add('DELETE', '/api/comments/{id}', fn($p) => DeleteComment::handle($p['id']));
 $router->add('POST', '/api/comments/{id}/vote', fn($p) => VoteContent::handle('comment', $p['id'], jsonBody()));
 
 // Communities

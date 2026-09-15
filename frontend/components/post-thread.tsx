@@ -68,6 +68,15 @@ export function PostThread({ postId }: { postId: string }) {
     setPost((prev) => (prev ? { ...prev, commentCount: prev.commentCount + 1 } : prev));
   }
 
+  function handleCommentDeleted(id: string, parentId: string | null) {
+    setComments((prev) =>
+      prev
+        .filter((comment) => comment.id !== id)
+        .map((comment) => (comment.parentId === id ? { ...comment, parentId } : comment))
+    );
+    setPost((prev) => (prev ? { ...prev, commentCount: Math.max(0, prev.commentCount - 1) } : prev));
+  }
+
   async function handleAddComment(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -170,6 +179,7 @@ export function PostThread({ postId }: { postId: string }) {
                   postId={postId}
                   childrenById={childrenById}
                   onReplyAdded={handleCommentAdded}
+                  onDeleted={handleCommentDeleted}
                 />
               </div>
             ))}

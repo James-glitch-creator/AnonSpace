@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
 import PasswordInput from "@/components/password-input";
+import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 import { ApiError, authApi } from "@/lib/api";
 
 type Step = "email" | "otp" | "password" | "done";
@@ -27,6 +28,7 @@ function ForgotPasswordForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const { secondsRemaining: resendCooldown, startCooldown: startResendCooldown } = useResendCooldown();
 
   async function handleRequestOtp(e: FormEvent) {
     e.preventDefault();
@@ -35,6 +37,7 @@ function ForgotPasswordForm() {
     setIsSubmitting(true);
     try {
       await authApi.requestPasswordResetOtp(email);
+      startResendCooldown();
       setStep("otp");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong.");
@@ -64,6 +67,7 @@ function ForgotPasswordForm() {
     setIsResending(true);
     try {
       await authApi.requestPasswordResetOtp(email);
+      startResendCooldown();
       setCode("");
       setResendMessage("A new verification code was sent.");
     } catch (err) {
@@ -199,10 +203,14 @@ function ForgotPasswordForm() {
                 <button
                   type="button"
                   onClick={handleResendOtp}
-                  disabled={isSubmitting || isResending}
+                  disabled={isSubmitting || isResending || resendCooldown > 0}
                   className="w-full text-center text-xs font-semibold text-cyan-400 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isResending ? "Resending code..." : "Resend code"}
+                  {isResending
+                    ? "Resending code..."
+                    : resendCooldown > 0
+                      ? `Resend code in ${resendCooldown}s`
+                      : "Resend code"}
                 </button>
 
                 <button
