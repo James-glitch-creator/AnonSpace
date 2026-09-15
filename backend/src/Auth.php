@@ -47,16 +47,25 @@ final class Auth
 
     public static function clearSession(): void
     {
-        $options = [
+        $baseOptions = [
             'expires' => time() - 3600,
             'path' => '/',
             'httponly' => true,
             'samesite' => 'Lax',
             'secure' => (Env::get('APP_ENV', 'development') === 'production'),
         ];
-        self::addCookieDomain($options);
 
-        setcookie(self::COOKIE_NAME, '', $options);
+        // Clear the current shared-domain cookie used by the frontend proxy.
+        $domainOptions = $baseOptions;
+        self::addCookieDomain($domainOptions);
+        setcookie(self::COOKIE_NAME, '', $domainOptions);
+
+        // Also clear a host-only cookie left by an older/misconfigured deployment.
+        // Browsers can retain both variants under the same name, which otherwise makes
+        // a successful logout appear to immediately sign the person back in.
+        if (isset($domainOptions['domain'])) {
+            setcookie(self::COOKIE_NAME, '', $baseOptions);
+        }
     }
 
     /** Returns the authenticated user document, or null if there is no valid session. */

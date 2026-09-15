@@ -1,10 +1,20 @@
 "use client";
 
-import { VenetianMask } from "lucide-react";
+import { LogOut, VenetianMask } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { authApi } from "@/lib/api";
 
 export function AdminNavbar() {
+  async function handleLogout() {
+    if (!window.confirm("Log out of AnonSpace?")) return;
+    try {
+      await authApi.logout();
+    } finally {
+      window.location.href = "/";
+    }
+  }
+
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b border-slate-200 bg-white/90 px-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90">
       <Link href="/admin" className="flex shrink-0 items-center gap-2.5">
@@ -23,6 +33,16 @@ export function AdminNavbar() {
 
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
+        <button
+          type="button"
+          onClick={handleLogout}
+          aria-label="Log out"
+          title="Log out"
+          className="flex h-9 items-center gap-2 rounded-xl px-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:text-slate-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-400 lg:hidden"
+        >
+          <LogOut className="h-4 w-4" />
+          <span className="hidden sm:inline">Log Out</span>
+        </button>
       </div>
     </header>
   );
