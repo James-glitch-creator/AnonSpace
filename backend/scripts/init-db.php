@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+// This maintenance script is shipped in the production image for Railway SSH use,
+// but must never be executable through the public Apache web root.
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
 require __DIR__ . '/../vendor/autoload.php';
 
 use App\Auth;

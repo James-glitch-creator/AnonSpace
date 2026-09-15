@@ -4,4 +4,5 @@
 vendor/
 uploads/
 composer.phar
-scripts/
+scripts/*
+!scripts/init-db.php
