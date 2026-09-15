@@ -160,6 +160,15 @@ export function PostThread({ postId }: { postId: string }) {
               className="w-full resize-none rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500"
             />
             {error && <p className="text-xs font-medium text-red-500">{error}</p>}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={isSubmitting || !body.trim()}
+                className="rounded-full bg-cyan-500 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSubmitting ? "Commenting..." : "Comment"}
+              </button>
+            </div>
           </form>
         )}
 
