@@ -10,6 +10,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [isAllowed, setIsAllowed] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isMobileNavOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsMobileNavOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isMobileNavOpen]);
 
   useEffect(() => {
     getCurrentUser().then((user) => {
@@ -46,10 +63,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
-      <AdminNavbar />
-      <div className="flex flex-1">
-        <AdminSidebar />
-        <main className="flex-1 space-y-5 p-4 md:p-6">{children}</main>
+      <AdminNavbar onOpenMenu={() => setIsMobileNavOpen(true)} />
+      <div className="flex min-w-0 flex-1">
+        <AdminSidebar isMobileOpen={isMobileNavOpen} onCloseMobile={() => setIsMobileNavOpen(false)} />
+        <main className="min-w-0 flex-1 space-y-4 p-3 sm:p-4 md:space-y-5 md:p-6">{children}</main>
       </div>
     </div>
   );

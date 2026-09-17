@@ -3,6 +3,7 @@
 import {
   Building2,
   ChevronDown,
+  X,
   FileText,
   Flag,
   LayoutGrid,
@@ -55,7 +56,7 @@ function navLinkClass(active: boolean): string {
 }
 
 /** Split out only because it reads the URL - useSearchParams needs a Suspense boundary. */
-function ReportsNavItem() {
+function ReportsNavItem({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const onReportsPage = pathname === "/admin/reports";
@@ -86,6 +87,7 @@ function ReportsNavItem() {
             <Link
               key={type}
               href={`/admin/reports?type=${type}`}
+              onClick={onNavigate}
               className={`block rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
                 activeType === type
                   ? "bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-400"
@@ -101,7 +103,13 @@ function ReportsNavItem() {
   );
 }
 
-export function AdminSidebar() {
+export function AdminSidebar({
+  isMobileOpen,
+  onCloseMobile,
+}: {
+  isMobileOpen: boolean;
+  onCloseMobile: () => void;
+}) {
   const pathname = usePathname();
   const [user, setUser] = useState<PublicUser | null>(null);
 
@@ -123,11 +131,12 @@ export function AdminSidebar() {
     }
   }
 
-  return (
-    <aside className="hidden w-56 shrink-0 border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 lg:flex lg:flex-col lg:justify-between">
+  function navigation(onNavigate?: () => void) {
+    return (
       <nav className="space-y-1 p-3">
         <Link
           href={overviewLink.href}
+          onClick={onNavigate}
           className={navLinkClass(pathname === overviewLink.href)}
         >
           <overviewLink.icon className="h-4.5 w-4.5" />
@@ -136,7 +145,7 @@ export function AdminSidebar() {
 
         {isSuperAdmin ? (
           superAdminLinks.map(({ label, href, icon: Icon }) => (
-            <Link key={href} href={href} className={navLinkClass(pathname.startsWith(href))}>
+            <Link key={href} href={href} onClick={onNavigate} className={navLinkClass(pathname.startsWith(href))}>
               <Icon className="h-4.5 w-4.5" />
               {label}
             </Link>
@@ -147,10 +156,10 @@ export function AdminSidebar() {
               <Flag className="h-4.5 w-4.5" />
               Reports
             </div>}>
-              <ReportsNavItem />
+              <ReportsNavItem onNavigate={onNavigate} />
             </Suspense>
             {otherAdminLinks.map(({ label, href, icon: Icon }) => (
-              <Link key={href} href={href} className={navLinkClass(pathname.startsWith(href))}>
+              <Link key={href} href={href} onClick={onNavigate} className={navLinkClass(pathname.startsWith(href))}>
                 <Icon className="h-4.5 w-4.5" />
                 {label}
               </Link>
@@ -158,7 +167,10 @@ export function AdminSidebar() {
           </>
         )}
       </nav>
+    );
+  }
 
+  const accountPanel = (
       <div className="border-t border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-3 p-4">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-cyan-400 to-cyan-600 text-xs font-bold text-slate-950">
@@ -182,6 +194,45 @@ export function AdminSidebar() {
           Log Out
         </button>
       </div>
-    </aside>
+  );
+
+  return (
+    <>
+      <aside className="hidden w-56 shrink-0 border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 lg:flex lg:flex-col lg:justify-between">
+        {navigation()}
+        {accountPanel}
+      </aside>
+
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-[70] lg:hidden">
+          <button
+            type="button"
+            aria-label="Close admin navigation"
+            onClick={onCloseMobile}
+            className="absolute inset-0 bg-slate-950/55 backdrop-blur-[1px]"
+          />
+          <aside className="relative flex h-full w-72 max-w-[85vw] flex-col border-r border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950">
+            <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 px-4 dark:border-slate-800">
+              <div>
+                <p className="text-sm font-extrabold text-slate-900 dark:text-white">Admin navigation</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">
+                  {isSuperAdmin ? "Superadmin" : "Admin"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onCloseMobile}
+                aria-label="Close admin navigation"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto">{navigation(onCloseMobile)}</div>
+            {accountPanel}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }
