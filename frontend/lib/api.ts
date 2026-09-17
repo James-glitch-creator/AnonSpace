@@ -226,6 +226,7 @@ export type Comment = {
   authorId: string;
   authorHandle: string;
   body: string;
+  isBanned: boolean;
   upvotes: number;
   downvotes: number;
   createdAt: string;

@@ -23,6 +23,7 @@ import { ReportButton } from "./report-button";
 import { RepostModal } from "./repost-modal";
 import { ShareMenu } from "./share-menu";
 import { UserHandleMenu } from "./user-handle-menu";
+import { ViewportVideo } from "./viewport-video";
 
 // A "line" here is whatever the author actually pressed Enter to create, not a CSS-wrapped
 // visual row - counting real newlines instead of relying on the browser's line-wrapping is
@@ -69,6 +70,7 @@ export function PostCard({
   canModerate = false,
   onPinChange,
   truncate = true,
+  autoPlayVideos = true,
 }: {
   post: Post;
   onDelete?: (id: string) => void;
@@ -82,6 +84,8 @@ export function PostCard({
   /** Clamp the body to 5 lines and tap through to the full post. Off for the post-thread
    *  page's own copy of this card, which is the full post view already. */
   truncate?: boolean;
+  /** Feed cards autoplay while visible. Admin surfaces and full threads opt out. */
+  autoPlayVideos?: boolean;
 }) {
   const [upvotes, setUpvotes] = useState(post.upvotes);
   const [downvotes, setDownvotes] = useState(post.downvotes);
@@ -372,9 +376,9 @@ export function PostCard({
                 />
               )}
               {post.repostOf.mediaType === "video" && post.repostOf.videoUrl && (
-                <video
+                <ViewportVideo
                   src={`${API_BASE_URL}${post.repostOf.videoUrl}`}
-                  controls
+                  autoPlayInView={autoPlayVideos && truncate}
                   className="mt-2 max-h-48 w-full rounded-lg"
                 />
               )}
@@ -390,9 +394,9 @@ export function PostCard({
       )}
 
       {post.mediaType === "video" && post.videoUrl && (
-        <video
+        <ViewportVideo
           src={`${API_BASE_URL}${post.videoUrl}`}
-          controls
+          autoPlayInView={autoPlayVideos && truncate}
           className="mt-3 max-h-96 w-full rounded-xl bg-black"
         />
       )}

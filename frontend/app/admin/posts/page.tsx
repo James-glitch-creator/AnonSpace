@@ -89,7 +89,7 @@ export default function AdminPostsPage() {
       ) : (
         <div className="space-y-4">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} onBanned={handleBanned} />
+            <PostCard key={post.id} post={post} onBanned={handleBanned} autoPlayVideos={false} />
           ))}
 
           {error && (

@@ -27,6 +27,10 @@ final class DeleteComment
             Response::error('You can only delete your own comments.', 403);
         }
 
+        if (($comment['status'] ?? 'visible') === 'banned') {
+            Response::error('Banned comments are retained to preserve their reply threads.', 403);
+        }
+
         // Preserve other people's replies by moving them up one level rather than
         // cascading the deletion through content the current user does not own.
         $newParentId = $comment['parentId'] ?? null;

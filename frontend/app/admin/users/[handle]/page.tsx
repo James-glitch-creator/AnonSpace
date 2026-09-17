@@ -117,7 +117,7 @@ export default function AdminUserProfilePage() {
       ) : (
         <div className="space-y-4">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <PostCard key={post.id} post={post} autoPlayVideos={false} />
           ))}
 
           {postsError && (

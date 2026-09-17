@@ -30,7 +30,7 @@ final class ListComments
         ['limit' => $limit, 'skip' => $skip] = Pagination::fromQuery($query, 50, 100);
 
         $comments = Database::comments()->find(
-            ['postId' => $postObjectId, 'status' => 'visible'],
+            ['postId' => $postObjectId, 'status' => ['$in' => ['visible', 'banned']]],
             ['sort' => ['createdAt' => 1], 'skip' => $skip, 'limit' => $limit]
         )->toArray();
 

@@ -38,6 +38,7 @@ export function CommentItem({
   const [downvotes, setDownvotes] = useState(comment.downvotes);
   const [myVote, setMyVote] = useState(comment.myVote);
   const [isVoting, setIsVoting] = useState(false);
+  const [isBanned, setIsBanned] = useState(comment.isBanned);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isOwnComment, setIsOwnComment] = useState(false);
@@ -82,6 +83,7 @@ export function CommentItem({
       setUpvotes(result.upvotes);
       setDownvotes(result.downvotes);
       setMyVote(result.myVote);
+      if (result.banned) setIsBanned(true);
     } catch {
       // Leave counts as-is; the button simply doesn't reflect an unsent vote.
     } finally {
@@ -168,11 +170,17 @@ export function CommentItem({
         </p>
       </div>
 
-      <p className="mt-1.5 pl-9 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-        {comment.body}
+      <p
+        className={`mt-1.5 pl-9 text-sm leading-relaxed ${
+          isBanned
+            ? "italic text-slate-400 dark:text-slate-500"
+            : "text-slate-700 dark:text-slate-300"
+        }`}
+      >
+        {isBanned ? "Banned comment" : comment.body}
       </p>
 
-      <div className="mt-1.5 flex items-center gap-2 pl-9">
+      {!isBanned && <div className="mt-1.5 flex items-center gap-2 pl-9">
         <div className="flex items-center gap-0.5 rounded-full bg-slate-100 px-1 py-0.5 dark:bg-slate-800">
           <button
             type="button"
@@ -240,7 +248,13 @@ export function CommentItem({
         )}
 
         {isMod && (
-          <BanButton targetType="comment" targetId={comment.id} targetLabel={comment.body} variant="icon" />
+          <BanButton
+            targetType="comment"
+            targetId={comment.id}
+            targetLabel={comment.body}
+            variant="icon"
+            onBanned={() => setIsBanned(true)}
+          />
         )}
 
         {!isOwnComment && !isMod && (
@@ -271,7 +285,7 @@ export function CommentItem({
             )}
           </div>
         )}
-      </div>
+      </div>}
 
       {deleteError && <p className="mt-1 pl-9 text-xs font-medium text-red-500">{deleteError}</p>}
 
@@ -291,6 +305,15 @@ export function CommentItem({
             className="w-full resize-none rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500"
           />
           {replyError && <p className="text-xs font-medium text-red-500">{replyError}</p>}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={isSubmittingReply || !replyBody.trim()}
+              className="rounded-full bg-cyan-500 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSubmittingReply ? "Replying..." : "Reply"}
+            </button>
+          </div>
         </form>
       )}
 
