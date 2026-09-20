@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AdminNavbar } from "@/components/admin/admin-navbar";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
@@ -8,7 +8,6 @@ import { getCurrentUser } from "@/lib/api";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const pathname = usePathname();
   const [isAllowed, setIsAllowed] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
@@ -30,34 +29,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     getCurrentUser().then((user) => {
-      // Superadmins get the /admin/accounts subtree, Overview, the /admin/users and
-      // /admin/communities subtrees, and their own Settings - registering/revoking admins
-      // is their main job, not moderation, but they're still an admin, so Overview,
-      // looking up regular accounts/communities, and managing their own password stay
-      // visible too. The proxy already enforces this at the routing layer; this is the
-      // same check again for defense in depth.
-      if (user?.role === "superadmin") {
-        const allowed =
-          pathname === "/admin" ||
-          pathname === "/admin/accounts" ||
-          pathname.startsWith("/admin/accounts/") ||
-          pathname === "/admin/users" ||
-          pathname.startsWith("/admin/users/") ||
-          pathname === "/admin/communities" ||
-          pathname.startsWith("/admin/communities/") ||
-          pathname === "/admin/settings";
-        if (allowed) {
-          setIsAllowed(true);
-        } else {
-          router.replace("/admin/accounts");
-        }
-      } else if (user?.role === "admin") {
+      // A superadmin is an admin with additional staff-management capabilities, so both
+      // roles can use every route in the admin panel. Individual superadmin-only pages
+      // still enforce their narrower role requirement themselves and in the backend.
+      if (user?.role === "admin" || user?.role === "superadmin") {
         setIsAllowed(true);
       } else {
         router.replace("/home");
       }
     });
-  }, [router, pathname]);
+  }, [router]);
 
   if (!isAllowed) return null;
 

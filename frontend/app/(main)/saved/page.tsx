@@ -3,12 +3,15 @@
 import { PostCard } from "@/components/post-card";
 import { RightRail } from "@/components/right-rail";
 import { POSTS_PAGE_SIZE, usePaginatedPosts } from "@/hooks/use-paginated-posts";
+import { useFeedScrollRestoration } from "@/hooks/feed-state-cache";
 import { postsApi } from "@/lib/api";
 
 export default function SavedPostsPage() {
   const { posts, isInitialLoading, isLoadingMore, hasMore, error, sentinelRef, loadMore } = usePaginatedPosts(
-    (page) => postsApi.saved({ page, limit: POSTS_PAGE_SIZE }).then((res) => res.posts)
+    (page) => postsApi.saved({ page, limit: POSTS_PAGE_SIZE }).then((res) => res.posts),
+    { cacheKey: "saved" }
   );
+  useFeedScrollRestoration("saved", !isInitialLoading);
 
   return (
     <>

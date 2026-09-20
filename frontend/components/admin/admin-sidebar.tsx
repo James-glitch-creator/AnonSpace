@@ -36,16 +36,7 @@ const REPORT_CATEGORIES: { label: string; type: ReportTargetType }[] = [
   { label: "Comments", type: "comment" },
 ];
 
-// Superadmins get Overview too (they're still an admin), plus their own Admins link for
-// registering/revoking admin accounts, the same account/community lookups admins get, and
-// their own Settings - just none of the report-review/ban-log links, which are moderation,
-// not their job.
-const superAdminLinks = [
-  { label: "Admins", href: "/admin/accounts", icon: Users },
-  { label: "Users", href: "/admin/users", icon: UserSearch },
-  { label: "Communities", href: "/admin/communities", icon: Building2 },
-  { label: "Setting", href: "/admin/settings", icon: Settings },
-];
+const superAdminLink = { label: "Admins", href: "/admin/accounts", icon: Users };
 
 function navLinkClass(active: boolean): string {
   return `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
@@ -143,29 +134,29 @@ export function AdminSidebar({
           {overviewLink.label}
         </Link>
 
-        {isSuperAdmin ? (
-          superAdminLinks.map(({ label, href, icon: Icon }) => (
-            <Link key={href} href={href} onClick={onNavigate} className={navLinkClass(pathname.startsWith(href))}>
-              <Icon className="h-4.5 w-4.5" />
-              {label}
-            </Link>
-          ))
-        ) : (
-          <>
-            <Suspense fallback={<div className={navLinkClass(false)}>
-              <Flag className="h-4.5 w-4.5" />
-              Reports
-            </div>}>
-              <ReportsNavItem onNavigate={onNavigate} />
-            </Suspense>
-            {otherAdminLinks.map(({ label, href, icon: Icon }) => (
-              <Link key={href} href={href} onClick={onNavigate} className={navLinkClass(pathname.startsWith(href))}>
-                <Icon className="h-4.5 w-4.5" />
-                {label}
-              </Link>
-            ))}
-          </>
+        {isSuperAdmin && (
+          <Link
+            href={superAdminLink.href}
+            onClick={onNavigate}
+            className={navLinkClass(pathname.startsWith(superAdminLink.href))}
+          >
+            <superAdminLink.icon className="h-4.5 w-4.5" />
+            {superAdminLink.label}
+          </Link>
         )}
+
+        <Suspense fallback={<div className={navLinkClass(false)}>
+          <Flag className="h-4.5 w-4.5" />
+          Reports
+        </div>}>
+          <ReportsNavItem onNavigate={onNavigate} />
+        </Suspense>
+        {otherAdminLinks.map(({ label, href, icon: Icon }) => (
+          <Link key={href} href={href} onClick={onNavigate} className={navLinkClass(pathname.startsWith(href))}>
+            <Icon className="h-4.5 w-4.5" />
+            {label}
+          </Link>
+        ))}
       </nav>
     );
   }

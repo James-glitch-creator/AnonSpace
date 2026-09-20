@@ -4,20 +4,29 @@ import { RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PostCard } from "@/components/post-card";
 import { RightRail } from "@/components/right-rail";
+import {
+  getFeedState,
+  setFeedState,
+  useFeedScrollRestoration,
+  type CursorFeedState,
+} from "@/hooks/feed-state-cache";
 import { ApiError, postsApi, type Post } from "@/lib/api";
 
 const PAGE_SIZE = 10;
 
 export default function NewsFeedPage() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const cachedState = getFeedState<CursorFeedState>("home");
+  const [posts, setPosts] = useState<Post[]>(cachedState?.posts ?? []);
+  const [isInitialLoading, setIsInitialLoading] = useState(cachedState === null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(cachedState?.hasMore ?? true);
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const nextCursorRef = useRef<string | null>(null);
+  const nextCursorRef = useRef<string | null>(cachedState?.nextCursor ?? null);
   const isLoadingRef = useRef(false);
-  const hasMoreRef = useRef(true);
+  const hasMoreRef = useRef(cachedState?.hasMore ?? true);
+
+  useFeedScrollRestoration("home", !isInitialLoading);
 
   const loadMore = useCallback(async (reset = false) => {
     if (isLoadingRef.current || (!reset && !hasMoreRef.current)) return;
@@ -58,6 +67,16 @@ export default function NewsFeedPage() {
   }, []);
 
   useEffect(() => {
+    if (isInitialLoading) return;
+    setFeedState("home", {
+      posts,
+      nextCursor: nextCursorRef.current,
+      hasMore,
+    });
+  }, [hasMore, isInitialLoading, posts]);
+
+  useEffect(() => {
+    if (cachedState !== null) return;
     let cancelled = false;
     queueMicrotask(() => {
       if (!cancelled) void loadMore(true);
@@ -65,7 +84,7 @@ export default function NewsFeedPage() {
     return () => {
       cancelled = true;
     };
-  }, [loadMore]);
+  }, [cachedState, loadMore]);
 
   useEffect(() => {
     if (isInitialLoading) return;

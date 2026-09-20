@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, type Post } from "@/lib/api";
+import { getFeedState, setFeedState, type FeedState } from "./feed-state-cache";
 
 /** Matches every post-list endpoint's page size - see home/page.tsx, the original place
  *  this pattern shipped. Keeping it fixed (rather than a param) means every post-card list
@@ -21,17 +22,18 @@ export const POSTS_PAGE_SIZE = 10;
  */
 export function usePaginatedPosts(
   fetchPage: (page: number) => Promise<Post[]>,
-  options?: { auto?: boolean; errorMessage?: string }
+  options?: { auto?: boolean; errorMessage?: string; cacheKey?: string }
 ) {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const cachedState = options?.cacheKey ? getFeedState<FeedState>(options.cacheKey) : null;
+  const [posts, setPosts] = useState<Post[]>(cachedState?.posts ?? []);
+  const [isInitialLoading, setIsInitialLoading] = useState(cachedState === null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(cachedState?.hasMore ?? true);
   const [error, setError] = useState<string | null>(null);
 
-  const pageRef = useRef(1);
+  const pageRef = useRef(cachedState?.nextPage ?? 1);
   const isLoadingRef = useRef(false);
-  const hasMoreRef = useRef(true);
+  const hasMoreRef = useRef(cachedState?.hasMore ?? true);
   // Always the latest closure, without forcing loadMore to change identity - callers that
   // rebuild fetchPage every render (most of them, since it closes over search/sort state)
   // shouldn't retrigger the mount effect or the sentinel's observer. Assigned in an effect,
@@ -40,6 +42,15 @@ export function usePaginatedPosts(
   useEffect(() => {
     fetchPageRef.current = fetchPage;
   });
+
+  useEffect(() => {
+    if (!options?.cacheKey || isInitialLoading) return;
+    setFeedState(options.cacheKey, {
+      posts,
+      nextPage: pageRef.current,
+      hasMore,
+    });
+  }, [hasMore, isInitialLoading, options?.cacheKey, posts]);
 
   const loadMore = useCallback(async (reset = false) => {
     if (isLoadingRef.current || (!reset && !hasMoreRef.current)) return;
@@ -79,6 +90,7 @@ export function usePaginatedPosts(
 
   useEffect(() => {
     if (options?.auto === false) return;
+    if (cachedState !== null) return;
     let cancelled = false;
     // Deferred a tick, not called synchronously in the effect body - same as the feed
     // page this pattern started in, so a mount doesn't set state within its own effect.

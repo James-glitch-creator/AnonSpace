@@ -7,14 +7,10 @@ const SESSION_COOKIE = "anonspace_token";
 // users to the appropriate home page.
 const PUBLIC_PATHS = ["/", "/login", "/register", "/forgot-password"];
 const GUEST_ONLY_PATHS = ["/", "/login", "/register"];
-// Superadmins don't get the regular app UI or the rest of the admin panel - their job is
-// registering/revoking admin accounts, plus Overview, looking up regular accounts and
-// communities since they're still an admin, and their own Settings - so those are the only
-// pages they're allowed on. Accounts stays their landing page. "/admin" is exact-only
-// (Overview itself); the rest allow their own subpaths too (e.g. "/admin/users/{handle}").
+// Superadmins inherit the complete admin panel and additionally manage admin accounts.
+// Accounts remains their landing page so their extra supervisory tools are immediately
+// available after login.
 const SUPERADMIN_HOME = "/admin/accounts";
-const SUPERADMIN_EXACT_EXTRA_PATHS = ["/admin"];
-const SUPERADMIN_EXTRA_PREFIXES = ["/admin/users", "/admin/communities", "/admin/settings"];
 // Admins moderate, they don't use the site as a member - the admin panel is a wholly
 // separate UI from the regular app, not just an extra page bolted onto it. Overview is
 // their landing page after logging in.
@@ -68,17 +64,14 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const onSuperAdminHome = pathname === SUPERADMIN_HOME || pathname.startsWith(`${SUPERADMIN_HOME}/`);
-  const onSuperAdminExtra =
-    SUPERADMIN_EXACT_EXTRA_PATHS.includes(pathname) ||
-    SUPERADMIN_EXTRA_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-  const onSuperAdminAllowed = onSuperAdminHome || onSuperAdminExtra;
-  if (role === "superadmin" && !onSuperAdminAllowed) {
-    return NextResponse.redirect(new URL(SUPERADMIN_HOME, request.url));
+  const onAdminArea = pathname === ADMIN_AREA || pathname.startsWith(`${ADMIN_AREA}/`);
+  if ((role === "admin" || role === "superadmin") && !onAdminArea) {
+    return NextResponse.redirect(new URL(homeFor(role), request.url));
   }
 
-  const onAdminArea = pathname === ADMIN_AREA || pathname.startsWith(`${ADMIN_AREA}/`);
-  if (role === "admin" && !onAdminArea) {
+  // Managing staff accounts is the one admin-panel capability reserved for superadmins.
+  const onAdminAccounts = pathname === SUPERADMIN_HOME || pathname.startsWith(`${SUPERADMIN_HOME}/`);
+  if (role === "admin" && onAdminAccounts) {
     return NextResponse.redirect(new URL(ADMIN_HOME, request.url));
   }
 
