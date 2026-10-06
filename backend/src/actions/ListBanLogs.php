@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Auth;
+use App\AutoBan;
 use App\Database;
 use App\Response;
 use MongoDB\BSON\ObjectId;
@@ -15,7 +16,10 @@ final class ListBanLogs
 
         $logs = Database::banLogs()->find([], ['sort' => ['createdAt' => -1], 'limit' => 200])->toArray();
 
-        Response::ok(['banLogs' => array_map(fn($log) => self::render((array) $log), $logs)]);
+        Response::ok([
+            'banLogs' => array_map(fn($log) => self::render((array) $log), $logs),
+            'autoBanSettings' => AutoBan::settings(),
+        ]);
     }
 
     private static function render(array $log): array

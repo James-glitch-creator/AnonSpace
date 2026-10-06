@@ -408,9 +408,15 @@ export const communitiesApi = {
     request<{ success: true; members: CommunityMember[] }>(`/api/communities/${slug}/members`),
 
   kick: (slug: string, userId: string) =>
-    request<{ success: true; kicked: true }>(`/api/communities/${slug}/members/${userId}/kick`, {
+    request<{ success: true; kicked: true; deletedPosts: number }>(`/api/communities/${slug}/members/${userId}/kick`, {
       method: "POST",
     }),
+
+  moderatePost: (slug: string, postId: string, action: "warn" | "delete", reason: string, details: string) =>
+    request<{ success: true; action: "warn" | "delete" }>(
+      `/api/communities/${encodeURIComponent(slug)}/posts/${postId}/moderate`,
+      { method: "POST", body: JSON.stringify({ action, reason, details }) }
+    ),
 
   pinPost: (slug: string, postId: string) =>
     request<{ success: true; post: Post }>(`/api/communities/${slug}/posts/${postId}/pin`, {
@@ -581,6 +587,11 @@ export type BanLogEntry = {
  *  right now - same vocabulary as the Reports page's own range picker. */
 export type AdminStatsRange = "today" | "7d" | "30d";
 
+export type AutoBanSettings = {
+  thresholdPercent: number;
+  minVotes: number;
+};
+
 export type AdminStats = {
   accountCount: number;
   /** New accounts within the selected range. */
@@ -592,6 +603,7 @@ export type AdminStats = {
   /** Reports awaiting review right now - not range-scoped, it's a queue size. */
   pendingReports: number;
   nearThresholdCount: number;
+  autoBanSettings: AutoBanSettings;
   activeCommunities: number;
 };
 
@@ -679,6 +691,15 @@ const BAN_PATHS: Record<BanTargetType, (idOrSlug: string) => string> = {
 };
 
 export const adminApi = {
+  getAutoBanSettings: () =>
+    request<{ success: true; settings: AutoBanSettings }>("/api/admin/settings/auto-ban"),
+
+  updateAutoBanSettings: (settings: AutoBanSettings) =>
+    request<{ success: true; settings: AutoBanSettings }>("/api/admin/settings/auto-ban", {
+      method: "POST",
+      body: JSON.stringify(settings),
+    }),
+
   overview: (range: AdminStatsRange = "today") =>
     request<{ success: true; stats: AdminStats; adminActions: AdminAction[] }>(
       withQuery("/api/admin/overview", { range })
@@ -746,7 +767,8 @@ export const adminApi = {
       body: JSON.stringify({ action }),
     }),
 
-  listBanLogs: () => request<{ success: true; banLogs: BanLogEntry[] }>("/api/admin/ban-logs"),
+  listBanLogs: () =>
+    request<{ success: true; banLogs: BanLogEntry[]; autoBanSettings: AutoBanSettings }>("/api/admin/ban-logs"),
 
   /** Superadmin only - admin accounts have no self-signup path. */
   listAccounts: () => request<{ success: true; accounts: PublicUser[] }>("/api/admin/accounts"),

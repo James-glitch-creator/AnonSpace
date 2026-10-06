@@ -5,20 +5,24 @@ import { useEffect, useMemo, useState } from "react";
 import { CategoryFilter } from "@/components/admin/category-filter";
 import { PaginationFooter } from "@/components/admin/pagination-footer";
 import { TypeBadge } from "@/components/admin/type-badge";
-import { adminApi, ApiError, type BanLogEntry } from "@/lib/api";
+import { adminApi, ApiError, type AutoBanSettings, type BanLogEntry } from "@/lib/api";
 
 const CATEGORY_OPTIONS = ["All Categories", "Post Only", "Comment Only", "Account Only", "Community Only"];
 
 export default function BanLogPage() {
   const [category, setCategory] = useState(CATEGORY_OPTIONS[0]);
   const [logs, setLogs] = useState<BanLogEntry[]>([]);
+  const [autoBanSettings, setAutoBanSettings] = useState<AutoBanSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     adminApi
       .listBanLogs()
-      .then(({ banLogs }) => setLogs(banLogs))
+      .then(({ banLogs, autoBanSettings }) => {
+        setLogs(banLogs);
+        setAutoBanSettings(autoBanSettings);
+      })
       .catch((err) => setError(err instanceof ApiError ? err.message : "Something went wrong."))
       .finally(() => setIsLoading(false));
   }, []);
@@ -121,9 +125,10 @@ export default function BanLogPage() {
         <PaginationFooter from={rows.length === 0 ? 0 : 1} to={rows.length} total={rows.length} />
 
         <p className="border-t border-slate-100 px-4 py-3 text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
-          Automatic bans trigger the instant a post or comment crosses 50% downvoted — no admin
-          approval involved. Admin-confirmed bans come from the Reports queue and always record
-          which admin approved them.
+          {autoBanSettings
+            ? `Current automatic rule: at least ${autoBanSettings.thresholdPercent}% downvotes with a minimum of ${autoBanSettings.minVotes} total votes, checked when a vote is cast, changed, or removed. `
+            : "Loading the current automatic ban rule. "}
+          Earlier bans may have used different settings. Admin-confirmed bans record which admin approved them.
         </p>
       </div>
     </div>

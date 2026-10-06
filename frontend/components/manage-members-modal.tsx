@@ -11,7 +11,7 @@ export function ManageMembersModal({
 }: {
   slug: string;
   onClose: () => void;
-  onKicked: () => void;
+  onKicked: (memberId: string) => void;
 }) {
   const [members, setMembers] = useState<CommunityMember[]>([]);
   const [query, setQuery] = useState("");
@@ -29,12 +29,13 @@ export function ManageMembersModal({
 
   async function kick(member: CommunityMember) {
     if (kickingId) return;
+    if (!window.confirm(`Kick ${member.handle}? All of their posts in this community and their comments on those posts will be permanently deleted.`)) return;
     setKickingId(member.id);
     setError(null);
     try {
       await communitiesApi.kick(slug, member.id);
       setMembers((prev) => prev.filter((m) => m.id !== member.id));
-      onKicked();
+      onKicked(member.id);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong.");
     } finally {

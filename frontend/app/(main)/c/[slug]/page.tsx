@@ -333,9 +333,12 @@ export default function CommunityPage() {
           <ManageMembersModal
             slug={community.slug}
             onClose={() => setIsManagingMembers(false)}
-            onKicked={() =>
-              setCommunity((prev) => (prev ? { ...prev, memberCount: prev.memberCount - 1 } : prev))
-            }
+            onKicked={(memberId) => {
+              setCommunity((prev) => (prev ? { ...prev, memberCount: prev.memberCount - 1 } : prev));
+              setPosts((prev) => prev.filter((post) => post.authorId !== memberId));
+              setPinnedPosts((prev) => prev.filter((post) => post.authorId !== memberId));
+              reloadPosts();
+            }}
           />
         )}
 
@@ -434,6 +437,7 @@ export default function CommunityPage() {
                     post={post}
                     onDelete={handlePostDeleted}
                     canModerate={community.isOwner}
+                    moderationCommunity={{ name: community.name, rules: community.rules }}
                     onPinChange={handlePinChange}
                   />
                 ))}

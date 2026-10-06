@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\AdminAccountActions;
+use App\Actions\AdminAutoBanSettings;
 use App\Actions\AdminGetCommunity;
 use App\Actions\AdminListCommunityPosts;
 use App\Actions\AdminListPosts;
@@ -50,6 +51,7 @@ use App\Actions\Logout;
 use App\Actions\MarkAllNotificationsRead;
 use App\Actions\MarkChatThreadRead;
 use App\Actions\MarkNotificationRead;
+use App\Actions\ModerateCommunityPost;
 use App\Actions\Me;
 use App\Actions\PinPost;
 use App\Actions\RefreshHandle;
@@ -166,6 +168,11 @@ $router->add(
     fn($p) => UpdateCommunity::handle($p['slug'], requestBody(), $_FILES)
 );
 $router->add('GET', '/api/communities/{slug}/posts', fn($p) => ListCommunityPosts::handle($p['slug'], $_GET));
+$router->add(
+    'POST',
+    '/api/communities/{slug}/posts/{id}/moderate',
+    fn($p) => ModerateCommunityPost::handle($p['slug'], $p['id'], jsonBody())
+);
 $router->add('POST', '/api/communities/{slug}/join', fn($p) => JoinCommunity::handle($p['slug']));
 $router->add('POST', '/api/communities/{slug}/leave', fn($p) => LeaveCommunity::handle($p['slug']));
 $router->add('GET', '/api/communities/{slug}/members', fn($p) => ListCommunityMembers::handle($p['slug']));
@@ -219,6 +226,8 @@ $router->add('POST', '/api/notifications/read-all', fn() => MarkAllNotifications
 $router->add('POST', '/api/notifications/preferences', fn() => UpdateNotificationPreferences::handle(jsonBody()));
 
 // Admin
+$router->add('GET', '/api/admin/settings/auto-ban', fn() => AdminAutoBanSettings::get());
+$router->add('POST', '/api/admin/settings/auto-ban', fn() => AdminAutoBanSettings::update(jsonBody()));
 $router->add('GET', '/api/admin/overview', fn() => AdminOverview::handle($_GET));
 $router->add('GET', '/api/admin/posts', fn() => AdminListPosts::handle($_GET));
 $router->add('POST', '/api/admin/posts/{id}/ban', fn($p) => BanTarget::handle('post', $p['id'], jsonBody()));

@@ -74,7 +74,7 @@ export default function AdminOverviewPage() {
         { label: "New posts & comments", value: stats.newContent.toLocaleString(), note: rangeNote },
         { label: "Auto-bans", value: stats.autoBans.toLocaleString(), note: rangeNote },
         { label: "Pending reports", value: stats.pendingReports.toLocaleString(), note: "awaiting review" },
-        { label: "Content near 50% line", value: stats.nearThresholdCount.toLocaleString(), note: "awaiting outcome" },
+        { label: `Content near ${stats.autoBanSettings.thresholdPercent}% line`, value: stats.nearThresholdCount.toLocaleString(), note: `minimum ${stats.autoBanSettings.minVotes} votes` },
         { label: "Active communities", value: stats.activeCommunities.toLocaleString(), note: "on the platform" },
       ]
     : [];

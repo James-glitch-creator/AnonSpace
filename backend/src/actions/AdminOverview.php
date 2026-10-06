@@ -25,6 +25,7 @@ final class AdminOverview
             $range = 'today';
         }
         $since = self::rangeStart($range);
+        $autoBanSettings = AutoBan::settings();
 
         // "Registered accounts" is a count of regular users, not staff - admins/superadmins
         // aren't accounts the platform is signing people up for. A missing role still means
@@ -44,7 +45,9 @@ final class AdminOverview
                     'createdAt' => ['$gte' => $since],
                 ]),
                 'pendingReports' => Database::reports()->countDocuments(['status' => 'pending']),
-                'nearThresholdCount' => self::nearThresholdCount('post') + self::nearThresholdCount('comment'),
+                'nearThresholdCount' => self::nearThresholdCount('post', $autoBanSettings)
+                    + self::nearThresholdCount('comment', $autoBanSettings),
+                'autoBanSettings' => $autoBanSettings,
                 'activeCommunities' => Database::communities()->countDocuments([]),
             ],
             'range' => $range,
@@ -69,25 +72,28 @@ final class AdminOverview
      *
      * @param 'post'|'comment' $targetType
      */
-    private static function nearThresholdCount(string $targetType): int
+    private static function nearThresholdCount(string $targetType, array $settings): int
     {
         $collection = $targetType === 'post' ? Database::posts() : Database::comments();
+        $threshold = $settings['thresholdPercent'] / 100;
+        // MongoDB may evaluate every $and operand, even when there are no votes.
+        $ratio = ['$divide' => ['$downvotes', ['$max' => [1, ['$add' => ['$upvotes', '$downvotes']]]]]];
 
         return $collection->countDocuments([
             'status' => 'visible',
             '$expr' => [
                 '$and' => [
-                    ['$gte' => [['$add' => ['$upvotes', '$downvotes']], AutoBan::MIN_VOTES]],
+                    ['$gte' => [['$add' => ['$upvotes', '$downvotes']], $settings['minVotes']]],
                     [
                         '$gte' => [
-                            ['$divide' => ['$downvotes', ['$add' => ['$upvotes', '$downvotes']]]],
-                            AutoBan::THRESHOLD - self::NEAR_MARGIN,
+                            $ratio,
+                            max(0, $threshold - self::NEAR_MARGIN),
                         ],
                     ],
                     [
                         '$lt' => [
-                            ['$divide' => ['$downvotes', ['$add' => ['$upvotes', '$downvotes']]]],
-                            AutoBan::THRESHOLD,
+                            $ratio,
+                            $threshold,
                         ],
                     ],
                 ],

@@ -24,6 +24,11 @@ final class Database
         return self::connection()->selectCollection('users');
     }
 
+    public static function settings(): \MongoDB\Collection
+    {
+        return self::connection()->selectCollection('settings');
+    }
+
     public static function posts(): \MongoDB\Collection
     {
         return self::connection()->selectCollection('posts');

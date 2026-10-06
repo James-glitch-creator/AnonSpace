@@ -15,9 +15,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { API_BASE_URL, ApiError, communitiesApi, getCurrentUser, isModerator, postsApi, type Post } from "@/lib/api";
+import { API_BASE_URL, ApiError, communitiesApi, getCurrentUser, isModerator, postsApi, type CommunityRule, type Post } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/format";
 import { BanButton } from "./admin/ban-button";
+import { CommunityPostModerationModal } from "./community-post-moderation-modal";
 import { PhotoCarousel } from "./photo-carousel";
 import { ReportButton } from "./report-button";
 import { RepostModal } from "./repost-modal";
@@ -68,6 +69,7 @@ export function PostCard({
   onDelete,
   onBanned,
   canModerate = false,
+  moderationCommunity,
   onPinChange,
   truncate = true,
   autoPlayVideos = true,
@@ -79,6 +81,7 @@ export function PostCard({
   onBanned?: (id: string) => void;
   /** Lets a community owner delete someone else's post from this card. */
   canModerate?: boolean;
+  moderationCommunity?: { name: string; rules: CommunityRule[] };
   /** Lets a community owner pin/unpin this post to the community's highlights strip. */
   onPinChange?: (id: string, isPinned: boolean) => void;
   /** Clamp the body to 5 lines and tap through to the full post. Off for the post-thread
@@ -92,6 +95,7 @@ export function PostCard({
   const [myVote, setMyVote] = useState(post.myVote);
   const [isVoting, setIsVoting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isModerationOpen, setIsModerationOpen] = useState(false);
   const [isOwnPost, setIsOwnPost] = useState(false);
   const [isMod, setIsMod] = useState(false);
   const [isSaved, setIsSaved] = useState(post.isSaved);
@@ -171,6 +175,10 @@ export function PostCard({
 
   async function handleDelete() {
     if (isDeleting) return;
+    if (canModerate && !isOwnPost) {
+      setIsModerationOpen(true);
+      return;
+    }
     if (!window.confirm("Delete this post? This can't be undone.")) return;
     setIsDeleting(true);
     try {
@@ -296,6 +304,18 @@ export function PostCard({
                   >
                     {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
                     {isPinned ? "Unpin" : "Pin to highlights"}
+                  </button>
+                )}
+                {canModerate && !isOwnPost && moderationCommunity && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setIsModerationOpen(true);
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-500/10"
+                  >
+                    Moderate post
                   </button>
                 )}
                 {!isOwnPost && (
@@ -491,6 +511,16 @@ export function PostCard({
             setIsReposting(false);
             setJustReposted(true);
           }}
+        />
+      )}
+
+      {isModerationOpen && moderationCommunity && (
+        <CommunityPostModerationModal
+          post={post}
+          communityName={moderationCommunity.name}
+          rules={moderationCommunity.rules}
+          onClose={() => setIsModerationOpen(false)}
+          onDeleted={(id) => onDelete?.(id)}
         />
       )}
 

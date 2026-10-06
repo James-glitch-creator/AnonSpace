@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import PasswordInput from "@/components/password-input";
+import { AutoBanSettingsCard } from "@/components/admin/auto-ban-settings-card";
 import { ApiError, authApi, getCurrentUser } from "@/lib/api";
 
 function PasswordCard({ email }: { email?: string }) {
@@ -108,18 +109,25 @@ function PasswordCard({ email }: { email?: string }) {
 
 export default function AdminSettingsPage() {
   const [email, setEmail] = useState<string | undefined>(undefined);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
-    getCurrentUser().then((user) => setEmail(user?.email));
+    getCurrentUser().then((user) => {
+      setEmail(user?.email);
+      setIsSuperAdmin(user?.role === "superadmin");
+    });
   }, []);
 
   return (
     <div className="space-y-5">
       <div>
         <h1 className="text-lg font-bold text-slate-900 dark:text-white">Settings</h1>
-        <p className="text-xs text-slate-400 dark:text-slate-500">Manage your admin account</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500">
+          {isSuperAdmin ? "Manage your account and platform moderation rules" : "Manage your admin account"}
+        </p>
       </div>
 
+      {isSuperAdmin && <AutoBanSettingsCard />}
       <PasswordCard email={email} />
     </div>
   );

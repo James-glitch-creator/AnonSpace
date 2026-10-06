@@ -4,6 +4,9 @@ namespace App\Actions;
 
 use App\Auth;
 use App\Communities;
+use App\Database;
+use App\Notifications;
+use App\PostDeletion;
 use App\Response;
 use Exception;
 use MongoDB\BSON\ObjectId;
@@ -42,9 +45,20 @@ final class KickMember
             Response::error('That user is not a member of this community', 404);
         }
 
+        $deletedPosts = 0;
+        foreach (Database::posts()->find(['communitySlug' => $slug, 'authorId' => $targetId]) as $post) {
+            PostDeletion::delete((array) $post);
+            $deletedPosts++;
+        }
+
         Communities::members()->deleteOne(['_id' => $existing['_id']]);
         Communities::collection()->updateOne(['_id' => $community['_id']], ['$inc' => ['memberCount' => -1]]);
+        Notifications::create(
+            $targetId,
+            'content_banned',
+            "You were removed from c/{$slug}, and {$deletedPosts} of your posts there were deleted."
+        );
 
-        Response::ok(['kicked' => true]);
+        Response::ok(['kicked' => true, 'deletedPosts' => $deletedPosts]);
     }
 }

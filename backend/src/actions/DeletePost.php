@@ -6,8 +6,8 @@ use App\Auth;
 use App\Communities;
 use App\Database;
 use App\Ids;
+use App\PostDeletion;
 use App\Response;
-use App\Uploads;
 
 final class DeletePost
 {
@@ -37,24 +37,11 @@ final class DeletePost
             Response::error('You can only delete your own posts.', 403);
         }
 
-        $commentIds = array_map(
-            fn($c) => $c['_id'],
-            Database::comments()->find(['postId' => $postId], ['projection' => ['_id' => 1]])->toArray()
-        );
+        if (!$isAuthor) {
+            Response::error('Use community moderation to delete a member post with a reason.', 403);
+        }
 
-        Database::votes()->deleteMany(['targetType' => 'post', 'targetId' => $postId]);
-        if ($commentIds !== []) {
-            Database::votes()->deleteMany(['targetType' => 'comment', 'targetId' => ['$in' => $commentIds]]);
-        }
-        Database::comments()->deleteMany(['postId' => $postId]);
-        Database::posts()->deleteOne(['_id' => $postId]);
-
-        foreach ($post['mediaUrls'] ?? [] as $url) {
-            Uploads::delete($url);
-        }
-        if (!empty($post['videoUrl'])) {
-            Uploads::delete($post['videoUrl']);
-        }
+        PostDeletion::delete((array) $post);
 
         Response::ok(['deleted' => true]);
     }

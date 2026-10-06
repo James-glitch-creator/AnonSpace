@@ -1,4 +1,4 @@
-import { Lock, MessagesSquare, ShieldCheck, Users, VenetianMask } from "lucide-react";
+import { Lock, MessagesSquare, VenetianMask } from "lucide-react";
 import Link from "next/link";
 
 const features = [
@@ -85,18 +85,6 @@ export default function LandingPage() {
               <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{description}</p>
             </div>
           ))}
-        </div>
-
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500">
-          <span className="flex items-center gap-1.5">
-            <Lock className="h-3.5 w-3.5 text-cyan-500" /> End-to-end encrypted
-          </span>
-          <span className="flex items-center gap-1.5">
-            <ShieldCheck className="h-3.5 w-3.5 text-cyan-500" /> Zero-knowledge
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Users className="h-3.5 w-3.5 text-cyan-500" /> 6M+ anonymous members
-          </span>
         </div>
       </main>
     </div>
