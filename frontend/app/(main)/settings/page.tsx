@@ -64,6 +64,17 @@ function nextHandleRefreshAt(createdAt: string | null, handleChangedAt: string |
   return nextWindow.toISOString();
 }
 
+function maskEmail(email: string): string {
+  const at = email.lastIndexOf("@");
+  if (at < 0) return "*".repeat(email.length);
+
+  const name = email.slice(0, at);
+  const maskedName = name.length <= 4
+    ? "*".repeat(name.length)
+    : `${name.slice(0, 2)}${"*".repeat(name.length - 4)}${name.slice(-2)}`;
+  return `${maskedName}${email.slice(at)}`;
+}
+
 function AppearanceCard() {
   const isDark = useIsDarkTheme();
   const t = useTranslate();
@@ -159,7 +170,7 @@ function AccountCard({ user, onHandleChange }: { user: PublicUser; onHandleChang
 
         <div className="rounded-xl border border-slate-100 p-3 dark:border-slate-800">
           <p className="text-xs text-slate-400 dark:text-slate-500">{t("Email")}</p>
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{user.email}</p>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{maskEmail(user.email)}</p>
         </div>
       </div>
     </Card>
