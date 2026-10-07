@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { CommunityAvatar } from "@/components/community-avatar";
 import { communitiesApi, type Community } from "@/lib/api";
 import { formatMemberCount } from "@/lib/format";
+import { useLanguage, useTranslate } from "@/lib/language";
 
 const TRENDING_PAGE_SIZE = 5;
 
@@ -14,6 +15,7 @@ const TRENDING_PAGE_SIZE = 5;
 const NON_COMMUNITY_SLUGS = new Set(["public"]);
 
 function CommunityRow({ c, ownerBadge = false }: { c: Community; ownerBadge?: boolean }) {
+  const language = useLanguage();
   return (
     <Link
       href={`/c/${c.slug}`}
@@ -26,7 +28,7 @@ function CommunityRow({ c, ownerBadge = false }: { c: Community; ownerBadge?: bo
           {ownerBadge && <Crown className="h-3 w-3 shrink-0 text-amber-500" />}
         </span>
         <span className="block truncate text-xs text-slate-400 dark:text-slate-500">
-          {formatMemberCount(c.memberCount)}
+          {formatMemberCount(c.memberCount, language)}
         </span>
       </span>
     </Link>
@@ -34,6 +36,7 @@ function CommunityRow({ c, ownerBadge = false }: { c: Community; ownerBadge?: bo
 }
 
 export function RightRail() {
+  const t = useTranslate();
   const [trending, setTrending] = useState<Community[]>([]);
   const [trendingExpanded, setTrendingExpanded] = useState(false);
   const [created, setCreated] = useState<Community[]>([]);
@@ -62,7 +65,7 @@ export function RightRail() {
           {trending.length > 0 && (
             <div className="mb-3">
               <h3 className="mb-1 px-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Trending Communities
+                {t("Trending Communities")}
               </h3>
               <div className="space-y-1">
                 {visibleTrending.map((c) => (
@@ -76,7 +79,7 @@ export function RightRail() {
                   className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-cyan-600 transition-all duration-200 hover:bg-cyan-50 dark:text-cyan-400 dark:hover:bg-cyan-500/10"
                 >
                   <ChevronDown className="h-3.5 w-3.5" />
-                  More
+                  {t("More")}
                 </button>
               )}
             </div>
@@ -85,7 +88,7 @@ export function RightRail() {
           {created.length > 0 && (
             <div className="mb-3">
               <h3 className="mb-1 px-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                My Communities
+                {t("My Communities")}
               </h3>
               <div className="space-y-1">
                 {created.map((c) => (
@@ -99,7 +102,7 @@ export function RightRail() {
             href="/communities/new"
             className="block w-full rounded-full bg-cyan-500 px-3 py-2 text-center text-xs font-semibold text-white transition-all duration-200 hover:bg-cyan-600"
           >
-            + New Community
+            {t("+ New Community")}
           </Link>
         </div>
       </div>

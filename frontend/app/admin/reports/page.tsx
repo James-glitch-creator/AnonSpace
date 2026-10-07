@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { adminApi, ApiError, type AdminReport, type ReportTargetType } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 const rangeOptions = ["Today", "Last 7 days", "Last 30 days"];
 
@@ -58,6 +59,7 @@ function targetHref(row: AdminReport): string | null {
 }
 
 function ReportsPageInner() {
+  const t = useTranslate();
   const searchParams = useSearchParams();
   const typeParam = searchParams.get("type");
   const type = isReportTargetType(typeParam) ? typeParam : null;
@@ -81,12 +83,12 @@ function ReportsPageInner() {
 
   async function review(id: string, action: "approve" | "dismiss", targetType: string) {
     if (action === "approve" && targetType === "user") {
-      if (!window.confirm("Ban this account? They'll be logged out immediately and can't log back in.")) {
+      if (!window.confirm(t("Ban this account? They'll be logged out immediately and can't log back in."))) {
         return;
       }
     }
     if (action === "approve" && targetType === "community") {
-      if (!window.confirm("Ban this community? It'll be hidden from listings/search and no one can post or join.")) {
+      if (!window.confirm(t("Ban this community? It'll be hidden from listings/search and no one can post or join."))) {
         return;
       }
     }
@@ -106,10 +108,10 @@ function ReportsPageInner() {
     <div className="space-y-5">
       <div>
         <h1 className="text-lg font-bold text-slate-900 dark:text-white">
-          Reports{type ? ` · ${CATEGORY_LABELS[type]}` : ""}
+          {t("Reports")}{type ? ` · ${t(CATEGORY_LABELS[type])}` : ""}
         </h1>
         <p className="text-xs text-slate-400 dark:text-slate-500">
-          Content flagged by users for admin attention, separate from vote-based bans
+          {t("Content flagged by users for admin attention, separate from vote-based bans")}
         </p>
       </div>
 
@@ -117,11 +119,10 @@ function ReportsPageInner() {
         <div className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <MousePointerClick className="h-8 w-8 text-slate-300 dark:text-slate-600" />
           <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-            Pick a report type to review
+            {t("Pick a report type to review")}
           </p>
           <p className="max-w-sm text-xs text-slate-400 dark:text-slate-500">
-            Choose Posts, Accounts, Communities, or Comments from the Reports menu in the sidebar
-            — each type shows on its own, never mixed together.
+            {t("Choose Posts, Accounts, Communities, or Comments from the Reports menu in the sidebar — each type shows on its own, never mixed together.")}
           </p>
         </div>
       ) : (
@@ -129,7 +130,7 @@ function ReportsPageInner() {
           <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 p-4 dark:border-slate-800">
             <span className="flex items-center gap-1.5 rounded-full bg-rose-100 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:bg-rose-500/15 dark:text-rose-400">
               <Flag className="h-3.5 w-3.5" />
-              {rows.length} open {countLabel(type, rows.length)}
+              {rows.length} {t("open")} {t(countLabel(type, rows.length))}
             </span>
 
             <div className="relative ml-auto">
@@ -138,7 +139,7 @@ function ReportsPageInner() {
                 onClick={() => setRangeOpen((v) => !v)}
                 className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
               >
-                {range.toUpperCase()}
+                {t(range).toUpperCase()}
                 <ChevronDown className={`h-3.5 w-3.5 transition-transform ${rangeOpen ? "rotate-180" : ""}`} />
               </button>
               {rangeOpen && (
@@ -156,7 +157,7 @@ function ReportsPageInner() {
                           : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
                       }`}
                     >
-                      {opt}
+                      {t(opt)}
                     </button>
                   ))}
                 </div>
@@ -175,10 +176,10 @@ function ReportsPageInner() {
             <table className="w-full min-w-[820px] table-fixed text-left text-sm">
               <thead>
                 <tr className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                  <th className="w-2/5 px-4 py-2">Content &amp; reason</th>
-                  {showsCommunityColumn(type) && <th className="px-4 py-2">Community</th>}
-                  <th className="px-4 py-2">Reported by</th>
-                  <th className="px-4 py-2">Actions</th>
+                  <th className="w-2/5 px-4 py-2">{t("Content & reason")}</th>
+                  {showsCommunityColumn(type) && <th className="px-4 py-2">{t("Community")}</th>}
+                  <th className="px-4 py-2">{t("Reported by")}</th>
+                  <th className="px-4 py-2">{t("Actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -188,7 +189,7 @@ function ReportsPageInner() {
                       colSpan={showsCommunityColumn(type) ? 4 : 3}
                       className="px-4 py-8 text-center text-xs text-slate-400 dark:text-slate-500"
                     >
-                      Loading reports...
+                      {t("Loading reports...")}
                     </td>
                   </tr>
                 ) : rows.length === 0 ? (
@@ -197,7 +198,7 @@ function ReportsPageInner() {
                       colSpan={showsCommunityColumn(type) ? 4 : 3}
                       className="px-4 py-8 text-center text-xs text-slate-400 dark:text-slate-500"
                     >
-                      No open {countLabel(type, 0)} to review.
+                      {t("No open")} {t(countLabel(type, 0))} {t("to review.")}
                     </td>
                   </tr>
                 ) : (
@@ -220,7 +221,7 @@ function ReportsPageInner() {
                           <p className="truncate font-medium text-slate-700 dark:text-slate-200">{row.preview}</p>
                         )}
                         <p className="truncate text-xs italic text-slate-400 dark:text-slate-500">
-                          {row.reason}
+                          {t(row.reason)}
                           {row.details ? ` — ${row.details}` : ""}
                         </p>
                       </td>
@@ -236,21 +237,21 @@ function ReportsPageInner() {
                             type="button"
                             disabled={busyId === row.id}
                             onClick={() => review(row.id, "approve", row.targetType)}
-                            title="Approve report - action the content"
+                            title={t("Approve report - action the content")}
                             className="flex items-center gap-1 rounded-full bg-rose-500 px-2.5 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             <Ban className="h-3.5 w-3.5" />
-                            Approve
+                            {t("Approve")}
                           </button>
                           <button
                             type="button"
                             disabled={busyId === row.id}
                             onClick={() => review(row.id, "dismiss", row.targetType)}
-                            title="Dismiss report - no action"
+                            title={t("Dismiss report - no action")}
                             className="flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                           >
                             <X className="h-3.5 w-3.5" />
-                            Dismiss
+                            {t("Dismiss")}
                           </button>
                         </div>
                       </td>
@@ -263,11 +264,7 @@ function ReportsPageInner() {
           </div>
 
           <p className="border-t border-slate-100 px-4 py-3 text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
-            Approving a post/comment report bans the content; approving an account report bans that
-            account entirely (they&apos;re logged out immediately and can&apos;t log back in);
-            approving a community report bans the community (hidden from listings/search, no one
-            can post or join). All three notify the reporter and whoever got banned. Dismissing
-            notifies the reporter that no violation was found.
+            {t("Approving a report bans the content or account and notifies those affected. Dismissing notifies the reporter that no violation was found.")}
           </p>
         </div>
       )}

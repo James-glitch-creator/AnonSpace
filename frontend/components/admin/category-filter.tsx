@@ -2,6 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { useTranslate } from "@/lib/language";
 
 export function CategoryFilter({
   options,
@@ -12,6 +13,7 @@ export function CategoryFilter({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const t = useTranslate();
   const [open, setOpen] = useState(false);
 
   return (
@@ -21,7 +23,7 @@ export function CategoryFilter({
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-600 transition-all duration-200 hover:border-cyan-300 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
       >
-        {value}
+        {t(value)}
         <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
@@ -39,7 +41,7 @@ export function CategoryFilter({
                   : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
               }`}
             >
-              {opt}
+              {t(opt)}
             </button>
           ))}
         </div>

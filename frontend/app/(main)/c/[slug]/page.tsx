@@ -11,6 +11,7 @@ import { PostCard } from "@/components/post-card";
 import { ReportButton } from "@/components/report-button";
 import { POSTS_PAGE_SIZE, usePaginatedPosts } from "@/hooks/use-paginated-posts";
 import { API_BASE_URL, communitiesApi, type Community, type CommunityPostSort, type Post } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 const SORT_OPTIONS: { value: CommunityPostSort; label: string }[] = [
   { value: "new", label: "Latest to oldest" },
@@ -28,6 +29,7 @@ function PinnedPostCard({
   canModerate: boolean;
   onUnpinned: (id: string) => void;
 }) {
+  const t = useTranslate();
   const [isUnpinning, setIsUnpinning] = useState(false);
 
   async function unpin() {
@@ -54,7 +56,7 @@ function PinnedPostCard({
             unpin();
           }}
           disabled={isUnpinning}
-          aria-label="Unpin post"
+          aria-label={t("Unpin post")}
           className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-slate-400 opacity-0 shadow transition-all duration-200 hover:text-rose-500 group-hover:opacity-100 disabled:cursor-not-allowed dark:bg-slate-900/90"
         >
           <PinOff className="h-3.5 w-3.5" />
@@ -66,13 +68,14 @@ function PinnedPostCard({
       )}
       <p className="line-clamp-3 text-xs font-medium text-slate-700 dark:text-slate-200">{post.body}</p>
       <span className="mt-auto text-[11px] text-slate-400 dark:text-slate-500">
-        {(post.upvotes - post.downvotes).toLocaleString()} pts &middot; {post.commentCount} comments
+        {(post.upvotes - post.downvotes).toLocaleString()} {t("pts")} &middot; {post.commentCount} {t("comments")}
       </span>
     </Link>
   );
 }
 
 export default function CommunityPage() {
+  const t = useTranslate();
   const { slug } = useParams<{ slug: string }>();
   const [community, setCommunity] = useState<Community | null>(null);
   const [pinnedPosts, setPinnedPosts] = useState<Post[]>([]);
@@ -197,7 +200,7 @@ export default function CommunityPage() {
   if (isLoading) {
     return (
       <main className="col-span-1 space-y-4">
-        <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>
+        <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading...")}</p>
       </main>
     );
   }
@@ -206,7 +209,7 @@ export default function CommunityPage() {
     return (
       <main className="col-span-1 space-y-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
-          Community not found.
+          {t("Community not found.")}
         </div>
       </main>
     );
@@ -250,7 +253,7 @@ export default function CommunityPage() {
                     className="flex items-center gap-1.5 rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    Create Post
+                    {t("Create a Post")}
                   </Link>
                 )}
 
@@ -269,7 +272,7 @@ export default function CommunityPage() {
                             : "bg-cyan-500 text-white hover:bg-cyan-600"
                         }`}
                       >
-                        {community.isJoined ? "Joined" : "Join"}
+                        {t(community.isJoined ? "Joined" : "Join")}
                       </button>
                     )}
 
@@ -277,7 +280,7 @@ export default function CommunityPage() {
                       <button
                         type="button"
                         onClick={() => setIsMenuOpen((v) => !v)}
-                        aria-label="Community options"
+                        aria-label={t("Community options")}
                         className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-all duration-200 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
                       >
                         <MoreHorizontal className="h-4 w-4" />
@@ -296,7 +299,7 @@ export default function CommunityPage() {
                                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                               >
                                 <Settings className="h-4 w-4" />
-                                Edit community
+                                {t("Edit community")}
                               </button>
                               <button
                                 type="button"
@@ -307,7 +310,7 @@ export default function CommunityPage() {
                                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                               >
                                 <UserX className="h-4 w-4" />
-                                Manage members
+                                {t("Manage members")}
                               </button>
                             </>
                           ) : (
@@ -357,9 +360,9 @@ export default function CommunityPage() {
           <div className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <Lock className="h-6 w-6 text-slate-300 dark:text-slate-600" />
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              {community.name} is a private community.
+              {community.name} {t("is a private community.")}
             </p>
-            <p className="text-xs text-slate-400 dark:text-slate-500">Join to see its posts.</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500">{t("Join to see its posts.")}</p>
           </div>
         ) : (
           <>
@@ -372,7 +375,7 @@ export default function CommunityPage() {
                 >
                   <Pin className="h-4 w-4 text-emerald-500" />
                   <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                    Community highlights
+                    {t("Community highlights")}
                   </span>
                   <span
                     className={`ml-auto text-xs text-slate-400 transition-transform duration-200 dark:text-slate-500 ${
@@ -404,7 +407,7 @@ export default function CommunityPage() {
                   value={postQuery}
                   onChange={(e) => setPostQuery(e.target.value)}
                   type="text"
-                  placeholder={`Search posts in ${community.name}...`}
+                  placeholder={`${t("Search posts in")} ${community.name}...`}
                   className="w-full rounded-full border border-slate-200 bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500 dark:focus:border-cyan-500"
                 />
               </div>
@@ -415,19 +418,19 @@ export default function CommunityPage() {
               >
                 {SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                    {t(opt.label)}
                   </option>
                 ))}
               </select>
             </div>
 
             {isLoadingPosts ? (
-              <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>
+              <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading...")}</p>
             ) : posts.length === 0 ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
                 {postQuery.trim()
-                  ? `No posts match "${postQuery.trim()}".`
-                  : `No posts yet in ${community.name}.`}
+                  ? `${t("No posts match")} "${postQuery.trim()}".`
+                  : `${t("No posts yet in")} ${community.name}.`}
               </div>
             ) : (
               <>
@@ -450,17 +453,17 @@ export default function CommunityPage() {
                       onClick={loadMore}
                       className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 hover:border-cyan-400 hover:text-cyan-600 dark:border-slate-700 dark:text-slate-300"
                     >
-                      Try again
+                      {t("Try again")}
                     </button>
                   </div>
                 )}
 
                 {isLoadingMore && (
-                  <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">Loading more...</p>
+                  <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading more...")}</p>
                 )}
                 {!hasMore && !postsError && (
                   <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-                    You&apos;re all caught up.
+                    {t("You're all caught up.")}
                   </p>
                 )}
               </>

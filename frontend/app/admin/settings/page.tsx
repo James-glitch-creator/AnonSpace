@@ -5,8 +5,10 @@ import { useEffect, useState, type FormEvent } from "react";
 import PasswordInput from "@/components/password-input";
 import { AutoBanSettingsCard } from "@/components/admin/auto-ban-settings-card";
 import { ApiError, authApi, getCurrentUser } from "@/lib/api";
+import { setLanguage, useLanguage, useTranslate } from "@/lib/language";
 
 function PasswordCard({ email }: { email?: string }) {
+  const t = useTranslate();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,7 +22,7 @@ function PasswordCard({ email }: { email?: string }) {
     setSuccess(false);
 
     if (newPassword !== confirmPassword) {
-      setError("New passwords don't match.");
+      setError(t("New passwords don't match."));
       return;
     }
 
@@ -43,15 +45,15 @@ function PasswordCard({ email }: { email?: string }) {
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Password</h2>
+      <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("Password")}</h2>
       <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-        Change the password used to log in to this admin account.
+        {t("Change the password used to log in to this admin account.")}
       </p>
 
       <form onSubmit={submit} className="mt-3 space-y-3">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-            Current password
+            {t("Current password")}
           </label>
           <PasswordInput
             required
@@ -62,11 +64,11 @@ function PasswordCard({ email }: { email?: string }) {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-            New password
+            {t("New password")}
           </label>
           <PasswordInput
             required
-            placeholder="At least 8 characters"
+            placeholder={t("At least 8 characters")}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className={inputClass}
@@ -74,7 +76,7 @@ function PasswordCard({ email }: { email?: string }) {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-            Confirm new password
+            {t("Confirm new password")}
           </label>
           <PasswordInput
             required
@@ -85,7 +87,7 @@ function PasswordCard({ email }: { email?: string }) {
         </div>
 
         {error && <p className="text-xs font-medium text-red-500">{error}</p>}
-        {success && <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Password updated.</p>}
+        {success && <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{t("Password updated.")}</p>}
 
         <div className="flex items-center gap-3">
           <button
@@ -93,13 +95,13 @@ function PasswordCard({ email }: { email?: string }) {
             disabled={isSubmitting}
             className="rounded-full bg-cyan-500 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isSubmitting ? "Updating..." : "Update password"}
+            {t(isSubmitting ? "Updating..." : "Update password")}
           </button>
           <Link
             href={email ? `/forgot-password?email=${encodeURIComponent(email)}` : "/forgot-password"}
             className="text-xs font-medium text-slate-500 hover:text-cyan-600 hover:underline dark:text-slate-400 dark:hover:text-cyan-400"
           >
-            Forgot your current password?
+            {t("Forgot your current password?")}
           </Link>
         </div>
       </form>
@@ -107,7 +109,22 @@ function PasswordCard({ email }: { email?: string }) {
   );
 }
 
+function AdminLanguageCard() {
+  const language = useLanguage();
+  const t = useTranslate();
+  const optionClass = (active: boolean) => `flex-1 rounded-xl border px-4 py-2.5 text-sm font-semibold ${active ? "border-cyan-400 bg-cyan-50 text-cyan-700 dark:border-cyan-500 dark:bg-cyan-500/10 dark:text-cyan-400" : "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300"}`;
+  return <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("Language")}</h2>
+    <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{t("Choose the language used in AnonSpace on this device.")}</p>
+    <div className="mt-3 flex gap-2">
+      <button type="button" lang="en" aria-pressed={language === "en"} onClick={() => setLanguage("en")} className={optionClass(language === "en")}>{t("English")}</button>
+      <button type="button" lang="my" aria-pressed={language === "my"} onClick={() => setLanguage("my")} className={optionClass(language === "my")}>{t("Burmese")}</button>
+    </div>
+  </div>;
+}
+
 export default function AdminSettingsPage() {
+  const t = useTranslate();
   const [email, setEmail] = useState<string | undefined>(undefined);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
@@ -121,13 +138,14 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white">Settings</h1>
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white">{t("Settings")}</h1>
         <p className="text-xs text-slate-400 dark:text-slate-500">
-          {isSuperAdmin ? "Manage your account and platform moderation rules" : "Manage your admin account"}
+          {t(isSuperAdmin ? "Manage your account and platform moderation rules" : "Manage your admin account")}
         </p>
       </div>
 
       {isSuperAdmin && <AutoBanSettingsCard />}
+      <AdminLanguageCard />
       <PasswordCard email={email} />
     </div>
   );

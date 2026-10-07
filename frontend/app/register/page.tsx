@@ -7,10 +7,12 @@ import { useState, type FormEvent } from "react";
 import PasswordInput from "@/components/password-input";
 import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 import { ApiError, authApi } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 type Step = "email" | "otp" | "password";
 
 export default function RegisterPage() {
+  const t = useTranslate();
   const router = useRouter();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
@@ -100,21 +102,20 @@ export default function RegisterPage() {
           </span>
           <div>
             <h1 className="text-2xl font-extrabold leading-tight text-white">
-              Speak Freely.
+              {t("Speak Freely.")}
               <br />
-              <span className="text-cyan-400">Stay Anonymous.</span>
+              <span className="text-cyan-400">{t("Stay Anonymous.")}</span>
             </h1>
             <p className="mt-2 text-sm text-slate-400">
-              Join millions who trust AnonSpace to protect their identity while sharing what
-              matters most.
+              {t("Join millions who trust AnonSpace to protect their identity while sharing what matters most.")}
             </p>
           </div>
           <div className="flex flex-wrap gap-4 text-xs text-slate-500">
             <span className="flex items-center gap-1.5">
-              <Lock className="h-3.5 w-3.5 text-cyan-500" /> End-to-end encrypted
+              <Lock className="h-3.5 w-3.5 text-cyan-500" /> {t("End-to-end encrypted")}
             </span>
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-cyan-500" /> Zero-knowledge
+              <ShieldCheck className="h-3.5 w-3.5 text-cyan-500" /> {t("Zero-knowledge")}
             </span>
           </div>
         </div>
@@ -122,16 +123,15 @@ export default function RegisterPage() {
         <div className="border-t border-slate-800 bg-slate-950/60 p-8 md:border-l md:border-t-0">
           {step === "email" && (
             <>
-              <h2 className="mb-1 text-lg font-bold text-white">Create Your Account</h2>
+              <h2 className="mb-1 text-lg font-bold text-white">{t("Create Your Account")}</h2>
               <p className="mb-6 text-xs text-slate-500">
-                We&apos;ll email you a 6-digit code to verify it&apos;s really you. You&apos;ll
-                get a random anonymous name automatically &mdash; no need to pick one.
+                {t("We'll email you a 6-digit code to verify it's really you. You'll get a random anonymous name automatically — no need to pick one.")}
               </p>
 
               <form className="space-y-4" onSubmit={handleRequestOtp}>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-400">
-                    Email Address
+                    {t("Email Address")}
                   </label>
                   <input
                     type="email"
@@ -149,7 +149,7 @@ export default function RegisterPage() {
                   disabled={isSubmitting}
                   className="w-full rounded-full bg-cyan-500 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSubmitting ? "Sending code..." : "Send Verification Code"}
+                  {t(isSubmitting ? "Sending code..." : "Send Verification Code")}
                 </button>
               </form>
             </>
@@ -157,15 +157,15 @@ export default function RegisterPage() {
 
           {step === "otp" && (
             <>
-              <h2 className="mb-1 text-lg font-bold text-white">Check Your Email</h2>
+              <h2 className="mb-1 text-lg font-bold text-white">{t("Check Your Email")}</h2>
               <p className="mb-6 text-xs text-slate-500">
-                Enter the 6-digit code we sent to <span className="text-slate-300">{email}</span>.
+                {t("Enter the 6-digit code we sent to")} <span className="text-slate-300">{email}</span>.
               </p>
 
               <form className="space-y-4" onSubmit={handleVerifyOtp}>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-400">
-                    Verification Code
+                    {t("Verification Code")}
                   </label>
                   <input
                     type="text"
@@ -190,7 +190,7 @@ export default function RegisterPage() {
                   disabled={isSubmitting || isResending}
                   className="w-full rounded-full bg-cyan-500 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSubmitting ? "Verifying..." : "Verify Code"}
+                  {t(isSubmitting ? "Verifying..." : "Verify Code")}
                 </button>
 
                 <button
@@ -200,10 +200,10 @@ export default function RegisterPage() {
                   className="w-full text-center text-xs font-semibold text-cyan-400 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isResending
-                    ? "Resending code..."
+                    ? t("Resending code...")
                     : resendCooldown > 0
-                      ? `Resend code in ${resendCooldown}s`
-                      : "Resend code"}
+                      ? `${t("Resend code in")} ${resendCooldown}s`
+                      : t("Resend code")}
                 </button>
 
                 <button
@@ -216,7 +216,7 @@ export default function RegisterPage() {
                   }}
                   className="w-full text-center text-xs font-medium text-slate-500 hover:text-slate-300"
                 >
-                  Use a different email
+                  {t("Use a different email")}
                 </button>
               </form>
             </>
@@ -224,36 +224,36 @@ export default function RegisterPage() {
 
           {step === "password" && (
             <>
-              <h2 className="mb-1 text-lg font-bold text-white">Set Your Password</h2>
+              <h2 className="mb-1 text-lg font-bold text-white">{t("Set Your Password")}</h2>
               <p className="mb-6 text-xs text-slate-500">
-                Email verified. Choose a password to finish creating your account.
+                {t("Email verified. Choose a password to finish creating your account.")}
               </p>
 
               <form className="space-y-4" onSubmit={handleCompleteSignup}>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-400">
-                    Password
+                    {t("Password")}
                   </label>
                   <PasswordInput
                     required
                     minLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter at least 8 characters"
+                    placeholder={t("Enter at least 8 characters")}
                     className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
                   />
                 </div>
 
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-400">
-                    Confirm Password
+                    {t("Confirm Password")}
                   </label>
                   <PasswordInput
                     required
                     minLength={8}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter your password"
+                    placeholder={t("Re-enter your password")}
                     className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
                   />
                 </div>
@@ -265,16 +265,16 @@ export default function RegisterPage() {
                   disabled={isSubmitting}
                   className="w-full rounded-full bg-cyan-500 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSubmitting ? "Creating account..." : "Create Account"}
+                  {t(isSubmitting ? "Creating account..." : "Create Account")}
                 </button>
               </form>
             </>
           )}
 
           <p className="mt-6 text-center text-xs text-slate-500">
-            Already have an account?{" "}
+            {t("Already have an account?")}{" "}
             <Link href="/login" className="font-semibold text-cyan-400 hover:underline">
-              Log In
+              {t("Log In")}
             </Link>
           </p>
         </div>

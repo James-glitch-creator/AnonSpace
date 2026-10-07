@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CommunityAvatar } from "@/components/community-avatar";
 import { authApi, communitiesApi, type Community } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 const newsLinks = [
   { label: "For You", href: "/home", icon: Rss },
@@ -57,8 +58,9 @@ function NavLink({
 }
 
 function LogoutButton() {
+  const t = useTranslate();
   async function handleLogout() {
-    if (!window.confirm("Log out of AnonSpace?")) return;
+    if (!window.confirm(t("Log out of AnonSpace?"))) return;
     try {
       await authApi.logout();
     } finally {
@@ -73,12 +75,13 @@ function LogoutButton() {
       className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
     >
       <LogOut className="h-4.5 w-4.5 shrink-0" />
-      <span className="truncate">Log Out</span>
+      <span className="truncate">{t("Log Out")}</span>
     </button>
   );
 }
 
 export function Sidebar() {
+  const t = useTranslate();
   const pathname = usePathname();
   const [communities, setCommunities] = useState<Community[]>([]);
 
@@ -98,20 +101,20 @@ export function Sidebar() {
       <div className="sticky top-24 space-y-6">
         <nav className="space-y-1">
           <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            News
+            {t("News")}
           </p>
           {newsLinks.map((link) => (
-            <NavLink key={link.href} {...link} active={pathname === link.href} />
+            <NavLink key={link.href} {...link} label={t(link.label)} active={pathname === link.href} />
           ))}
         </nav>
 
         <nav className="space-y-1">
           <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            Joined Communities
+            {t("Joined Communities")}
           </p>
           {communities.length === 0 ? (
             <p className="px-3 text-xs text-slate-400 dark:text-slate-500">
-              Join a community to see it here.
+              {t("Join a community to see it here.")}
             </p>
           ) : (
             communities.map((c) => (
@@ -134,7 +137,7 @@ export function Sidebar() {
         <div className="space-y-1 border-t border-slate-200 pt-4 dark:border-slate-800">
           <NavLink
             href="/settings"
-            label="Setting"
+            label={t("Setting")}
             icon={Settings}
             active={pathname === "/settings"}
           />

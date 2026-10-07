@@ -4,6 +4,7 @@ import { Bell } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { notificationsApi } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 const POLL_INTERVAL_MS = 20000;
 
@@ -12,6 +13,7 @@ const POLL_INTERVAL_MS = 20000;
  *  open the bell stays in its "hover" look to show it's the active view; tapping it again
  *  is what closes the page (back to wherever you were) and reverts the icon. */
 export function NotificationBell() {
+  const t = useTranslate();
   const router = useRouter();
   const pathname = usePathname();
   const isActive = pathname === "/notifications";
@@ -42,7 +44,7 @@ export function NotificationBell() {
     <button
       type="button"
       onClick={toggle}
-      aria-label="Notifications"
+      aria-label={t("Notifications")}
       aria-pressed={isActive}
       className={`relative flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 ${
         isActive

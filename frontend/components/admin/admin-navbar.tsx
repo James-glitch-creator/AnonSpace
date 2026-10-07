@@ -4,10 +4,12 @@ import { LogOut, Menu, VenetianMask } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { authApi } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 export function AdminNavbar({ onOpenMenu }: { onOpenMenu: () => void }) {
+  const t = useTranslate();
   async function handleLogout() {
-    if (!window.confirm("Log out of AnonSpace?")) return;
+    if (!window.confirm(t("Log out of AnonSpace?"))) return;
     try {
       await authApi.logout();
     } finally {
@@ -20,7 +22,7 @@ export function AdminNavbar({ onOpenMenu }: { onOpenMenu: () => void }) {
       <button
         type="button"
         onClick={onOpenMenu}
-        aria-label="Open admin navigation"
+        aria-label={t("Open admin navigation")}
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-cyan-600 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-cyan-400 lg:hidden"
       >
         <Menu className="h-5 w-5" />
@@ -44,12 +46,12 @@ export function AdminNavbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         <button
           type="button"
           onClick={handleLogout}
-          aria-label="Log out"
-          title="Log out"
+          aria-label={t("Log out")}
+          title={t("Log out")}
           className="flex h-9 items-center gap-2 rounded-xl px-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:text-slate-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-400 lg:hidden"
         >
           <LogOut className="h-4 w-4" />
-          <span className="hidden sm:inline">Log Out</span>
+          <span className="hidden sm:inline">{t("Log Out")}</span>
         </button>
       </div>
     </header>

@@ -3,6 +3,7 @@
 import { CircleCheck, Flag, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ApiError, MODERATION_REASONS, reportsApi, type ReportTargetType } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 /** How long the "Reported" confirmation stays up before onReported fires. */
 const CONFIRMATION_MS = 2000;
@@ -23,6 +24,7 @@ export function ReportButton({
    *  nothing left to do in it. */
   onReported?: () => void;
 }) {
+  const t = useTranslate();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<string | null>(null);
   const [details, setDetails] = useState("");
@@ -66,12 +68,12 @@ export function ReportButton({
     return variant === "menu-item" ? (
       <p className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm font-medium text-emerald-600 dark:text-emerald-400">
         <CircleCheck className="h-4 w-4" />
-        Reported
+        {t("Reported")}
       </p>
     ) : (
       <span className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
         <CircleCheck className="h-4 w-4" />
-        Reported
+        {t("Reported")}
       </span>
     );
   }
@@ -82,21 +84,21 @@ export function ReportButton({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label={`Report this ${targetType}`}
+          aria-label={`${t("Report this")} ${t(targetType)}`}
           className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           <Flag className="h-4 w-4" />
-          Report
+          {t("Report")}
         </button>
       ) : (
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label={`Report this ${targetType}`}
+          aria-label={`${t("Report this")} ${t(targetType)}`}
           className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-slate-500 transition-all duration-200 hover:bg-rose-50 hover:text-rose-600 dark:text-slate-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
         >
           <Flag className="h-4 w-4" />
-          Report
+          {t("Report")}
         </button>
       )}
 
@@ -113,12 +115,12 @@ export function ReportButton({
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                Report this {targetType}
+                {t("Report this")} {t(targetType)}
               </h2>
               <button
                 type="button"
                 onClick={close}
-                aria-label="Close"
+                aria-label={t("Close")}
                 className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
               >
                 <X className="h-4 w-4" />
@@ -150,7 +152,7 @@ export function ReportButton({
                     }}
                     className="accent-cyan-500"
                   />
-                  {r}
+                  {t(r)}
                 </label>
               ))}
             </div>
@@ -160,19 +162,18 @@ export function ReportButton({
                 <textarea
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
-                  placeholder="Describe the reason for this report..."
+                  placeholder={t("Describe the reason for this report...")}
                   rows={2}
                   className="mt-3 w-full resize-none rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500"
                 />
                 <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-                  Required when reporting for another reason.
+                  {t("Required when reporting for another reason.")}
                 </p>
               </>
             )}
 
             <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
-              Reports go to human moderators for a legality review only — this does not remove the
-              content by itself. Ordinary downvotes still handle everything else.
+              {t("Reports go to human moderators for a legality review only — this does not remove the content by itself. Ordinary downvotes still handle everything else.")}
             </p>
 
             {error && <p className="mt-2 text-xs font-medium text-red-500">{error}</p>}
@@ -183,7 +184,7 @@ export function ReportButton({
                 onClick={close}
                 className="flex-1 rounded-full border border-slate-200 py-2 text-xs font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
               >
-                Cancel
+                {t("Cancel")}
               </button>
               <button
                 type="button"
@@ -191,7 +192,7 @@ export function ReportButton({
                 onClick={submit}
                 className="flex-1 rounded-full bg-rose-500 py-2 text-xs font-semibold text-white transition-all duration-200 hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {isSubmitting ? "Submitting..." : "Submit report"}
+                {t(isSubmitting ? "Submitting..." : "Submit report")}
               </button>
             </div>
           </div>

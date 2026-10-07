@@ -7,6 +7,7 @@ import { useState, type FormEvent } from "react";
 import PasswordInput from "@/components/password-input";
 import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 import { adminApi, ApiError } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 type Step = "details" | "otp" | "password";
 
@@ -14,6 +15,7 @@ const inputClass =
   "w-full rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2 text-sm text-slate-700 outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200";
 
 export default function RegisterAdminPage() {
+  const t = useTranslate();
   const router = useRouter();
   const [step, setStep] = useState<Step>("details");
   const [fullName, setFullName] = useState("");
@@ -102,7 +104,7 @@ export default function RegisterAdminPage() {
         className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        Back to Admins
+        {t("Back to Admins")}
       </Link>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -110,16 +112,16 @@ export default function RegisterAdminPage() {
           <>
             <h1 className="mb-1 flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
               <UserPlus className="h-5 w-5" />
-              Register Admin
+              {t("Register Admin")}
             </h1>
             <p className="mb-6 text-xs text-slate-400 dark:text-slate-500">
-              We&apos;ll email a 6-digit code to verify the address before the account is created.
+              {t("We'll email a 6-digit code to verify the address before the account is created.")}
             </p>
 
             <form className="space-y-4" onSubmit={handleRequestOtp}>
               <div>
                 <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Full Name
+                  {t("Full Name")}
                 </label>
                 <input
                   type="text"
@@ -132,7 +134,7 @@ export default function RegisterAdminPage() {
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Email Address
+                  {t("Email Address")}
                 </label>
                 <input
                   type="email"
@@ -150,7 +152,7 @@ export default function RegisterAdminPage() {
                 disabled={isSubmitting}
                 className="w-full rounded-full bg-cyan-500 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSubmitting ? "Sending code..." : "Send Verification Code"}
+                {t(isSubmitting ? "Sending code..." : "Send Verification Code")}
               </button>
             </form>
           </>
@@ -158,16 +160,16 @@ export default function RegisterAdminPage() {
 
         {step === "otp" && (
           <>
-            <h1 className="mb-1 text-lg font-bold text-slate-900 dark:text-white">Check Their Email</h1>
+            <h1 className="mb-1 text-lg font-bold text-slate-900 dark:text-white">{t("Check Their Email")}</h1>
             <p className="mb-6 text-xs text-slate-400 dark:text-slate-500">
-              Enter the 6-digit code sent to{" "}
+              {t("Enter the 6-digit code sent to")}{" "}
               <span className="text-slate-600 dark:text-slate-300">{email}</span>.
             </p>
 
             <form className="space-y-4" onSubmit={handleVerifyOtp}>
               <div>
                 <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Verification Code
+                  {t("Verification Code")}
                 </label>
                 <input
                   type="text"
@@ -192,7 +194,7 @@ export default function RegisterAdminPage() {
                 disabled={isSubmitting || isResending}
                 className="w-full rounded-full bg-cyan-500 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSubmitting ? "Verifying..." : "Verify Code"}
+                {t(isSubmitting ? "Verifying..." : "Verify Code")}
               </button>
 
               <button
@@ -202,10 +204,10 @@ export default function RegisterAdminPage() {
                 className="w-full text-center text-xs font-semibold text-cyan-600 hover:text-cyan-500 disabled:cursor-not-allowed disabled:opacity-60 dark:text-cyan-400 dark:hover:text-cyan-300"
               >
                 {isResending
-                  ? "Resending code..."
+                  ? t("Resending code...")
                   : resendCooldown > 0
-                    ? `Resend code in ${resendCooldown}s`
-                    : "Resend code"}
+                    ? `${t("Resend code in")} ${resendCooldown}s`
+                    : t("Resend code")}
               </button>
 
               <button
@@ -218,7 +220,7 @@ export default function RegisterAdminPage() {
                 }}
                 className="w-full text-center text-xs font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
-                Use a different email
+                {t("Use a different email")}
               </button>
             </form>
           </>
@@ -226,36 +228,36 @@ export default function RegisterAdminPage() {
 
         {step === "password" && (
           <>
-            <h1 className="mb-1 text-lg font-bold text-slate-900 dark:text-white">Set a Password</h1>
+            <h1 className="mb-1 text-lg font-bold text-slate-900 dark:text-white">{t("Set a Password")}</h1>
             <p className="mb-6 text-xs text-slate-400 dark:text-slate-500">
-              Email verified. Choose a password for {fullName}&apos;s admin account.
+              {t("Email verified. Choose a password for")} {fullName} {t("admin account.")}
             </p>
 
             <form className="space-y-4" onSubmit={handleComplete}>
               <div>
                 <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Password
+                  {t("Password")}
                 </label>
                 <PasswordInput
                   required
                   minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 8 characters"
+                  placeholder={t("At least 8 characters")}
                   className={inputClass}
                 />
               </div>
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Confirm Password
+                  {t("Confirm Password")}
                 </label>
                 <PasswordInput
                   required
                   minLength={8}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Re-enter the password"
+                  placeholder={t("Re-enter the password")}
                   className={inputClass}
                 />
               </div>
@@ -267,7 +269,7 @@ export default function RegisterAdminPage() {
                 disabled={isSubmitting}
                 className="w-full rounded-full bg-cyan-500 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSubmitting ? "Creating account..." : "Create Admin Account"}
+                {t(isSubmitting ? "Creating account..." : "Create Admin Account")}
               </button>
             </form>
           </>

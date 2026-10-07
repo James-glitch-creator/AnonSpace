@@ -3,6 +3,7 @@
 import { Crown, Search, UserX, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ApiError, communitiesApi, type CommunityMember } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 export function ManageMembersModal({
   slug,
@@ -13,6 +14,7 @@ export function ManageMembersModal({
   onClose: () => void;
   onKicked: (memberId: string) => void;
 }) {
+  const t = useTranslate();
   const [members, setMembers] = useState<CommunityMember[]>([]);
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +31,7 @@ export function ManageMembersModal({
 
   async function kick(member: CommunityMember) {
     if (kickingId) return;
-    if (!window.confirm(`Kick ${member.handle}? All of their posts in this community and their comments on those posts will be permanently deleted.`)) return;
+    if (!window.confirm(`${t("Kick")} ${member.handle}? ${t("All of their posts in this community and their comments on those posts will be permanently deleted.")}`)) return;
     setKickingId(member.id);
     setError(null);
     try {
@@ -59,11 +61,11 @@ export function ManageMembersModal({
         className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Manage members</h2>
+          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("Manage members")}</h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("Close")}
             className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <X className="h-4 w-4" />
@@ -76,16 +78,16 @@ export function ManageMembersModal({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             type="text"
-            placeholder="Search members..."
+            placeholder={t("Search members...")}
             className="w-full rounded-full border border-slate-200 bg-slate-100 py-2 pl-8 pr-3 text-xs text-slate-700 outline-none placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500"
           />
         </div>
 
         {isLoading ? (
-          <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>
+          <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading...")}</p>
         ) : filteredMembers.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-            {members.length === 0 ? "No members." : "No members match your search."}
+            {t(members.length === 0 ? "No members." : "No members match your search.")}
           </p>
         ) : (
           <div className="max-h-80 space-y-1 overflow-y-auto">
@@ -100,18 +102,18 @@ export function ManageMembersModal({
                 {member.isOwner ? (
                   <span className="flex items-center gap-1 text-xs font-semibold text-amber-500">
                     <Crown className="h-3.5 w-3.5" />
-                    Owner
+                    {t("Owner")}
                   </span>
                 ) : (
                   <button
                     type="button"
                     disabled={kickingId === member.id}
                     onClick={() => kick(member)}
-                    aria-label={`Kick ${member.handle}`}
+                    aria-label={`${t("Kick")} ${member.handle}`}
                     className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-rose-500 transition-all duration-200 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-rose-500/10"
                   >
                     <UserX className="h-3.5 w-3.5" />
-                    {kickingId === member.id ? "Kicking..." : "Kick"}
+                    {t(kickingId === member.id ? "Kicking..." : "Kick")}
                   </button>
                 )}
               </div>

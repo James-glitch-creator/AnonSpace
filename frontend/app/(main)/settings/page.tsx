@@ -16,6 +16,7 @@ import {
 } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/format";
 import { setTheme, useIsDarkTheme } from "@/components/theme-toggle";
+import { setLanguage, useLanguage, useTranslate } from "@/lib/language";
 
 const NOTIFICATION_TYPES: { type: NotificationType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { type: "post_commented", label: "Someone comments on my post", icon: MessageCircle },
@@ -27,10 +28,11 @@ const NOTIFICATION_TYPES: { type: NotificationType; label: string; icon: React.C
 ];
 
 function Card({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+  const t = useTranslate();
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">{title}</h2>
-      {subtitle && <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{subtitle}</p>}
+      <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t(title)}</h2>
+      {subtitle && <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{t(subtitle)}</p>}
       <div className="mt-3">{children}</div>
     </div>
   );
@@ -64,6 +66,7 @@ function nextHandleRefreshAt(createdAt: string | null, handleChangedAt: string |
 
 function AppearanceCard() {
   const isDark = useIsDarkTheme();
+  const t = useTranslate();
 
   const optionClass = (active: boolean) =>
     `flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all duration-200 ${
@@ -77,18 +80,31 @@ function AppearanceCard() {
       <div className="grid grid-cols-2 gap-2">
         <button type="button" onClick={() => setTheme(false)} aria-pressed={!isDark} className={optionClass(!isDark)}>
           <Sun className="h-4 w-4" />
-          Light
+          {t("Light")}
         </button>
         <button type="button" onClick={() => setTheme(true)} aria-pressed={isDark} className={optionClass(isDark)}>
           <Moon className="h-4 w-4" />
-          Dark
+          {t("Dark")}
         </button>
       </div>
     </Card>
   );
 }
 
+function LanguageCard() {
+  const language = useLanguage();
+  const t = useTranslate();
+  const optionClass = (active: boolean) => `flex items-center justify-center rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${active ? "border-cyan-400 bg-cyan-50 text-cyan-700 dark:border-cyan-500 dark:bg-cyan-500/10 dark:text-cyan-400" : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"}`;
+  return <Card title="Language" subtitle="Choose the language used in AnonSpace on this device.">
+    <div className="grid grid-cols-2 gap-2">
+      <button type="button" lang="en" onClick={() => setLanguage("en")} aria-pressed={language === "en"} className={optionClass(language === "en")}>{t("English")}</button>
+      <button type="button" lang="my" onClick={() => setLanguage("my")} aria-pressed={language === "my"} className={optionClass(language === "my")}>{t("Burmese")}</button>
+    </div>
+  </Card>;
+}
+
 function AccountCard({ user, onHandleChange }: { user: PublicUser; onHandleChange: (handle: string) => void }) {
+  const t = useTranslate();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // null means "derive from the user prop"; only set once the refresh call itself returns a
@@ -99,7 +115,7 @@ function AccountCard({ user, onHandleChange }: { user: PublicUser; onHandleChang
   const isEligible = !nextEligibleAt || new Date(nextEligibleAt) <= new Date();
 
   async function refreshHandle() {
-    if (!window.confirm("Roll a new anonymous name? Your past posts and comments will keep showing your old one.")) {
+    if (!window.confirm(t("Roll a new anonymous name? Your past posts and comments will keep showing your old one."))) {
       return;
     }
     setIsRefreshing(true);
@@ -120,30 +136,29 @@ function AccountCard({ user, onHandleChange }: { user: PublicUser; onHandleChang
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 p-3 dark:border-slate-800">
           <div>
-            <p className="text-xs text-slate-400 dark:text-slate-500">Anonymous name</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500">{t("Anonymous name")}</p>
             <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{user.handle}</p>
           </div>
           <button
             type="button"
             onClick={refreshHandle}
             disabled={!isEligible || isRefreshing}
-            title={isEligible ? "Roll a new name" : `Available again ${nextEligibleAt ? formatRelativeTime(nextEligibleAt) : ""}`}
+            title={isEligible ? t("Roll a new name") : `${t("Available again")} ${nextEligibleAt ? formatRelativeTime(nextEligibleAt) : ""}`}
             className="flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-            Refresh
+            {t("Refresh")}
           </button>
         </div>
         {!isEligible && nextEligibleAt && (
           <p className="px-1 text-[11px] text-slate-400 dark:text-slate-500">
-            You can refresh your name on {new Date(nextEligibleAt).toLocaleDateString()} — every 6 months from
-            the date you created your account.
+            {t("You can refresh your name on")} {new Date(nextEligibleAt).toLocaleDateString()} — {t("every 6 months from the date you created your account.")}
           </p>
         )}
         {error && <p className="px-1 text-xs font-medium text-red-500">{error}</p>}
 
         <div className="rounded-xl border border-slate-100 p-3 dark:border-slate-800">
-          <p className="text-xs text-slate-400 dark:text-slate-500">Email</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500">{t("Email")}</p>
           <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{user.email}</p>
         </div>
       </div>
@@ -152,6 +167,7 @@ function AccountCard({ user, onHandleChange }: { user: PublicUser; onHandleChang
 }
 
 function PasswordCard({ email }: { email?: string }) {
+  const t = useTranslate();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -165,7 +181,7 @@ function PasswordCard({ email }: { email?: string }) {
     setSuccess(false);
 
     if (newPassword !== confirmPassword) {
-      setError("New passwords don't match.");
+      setError(t("New passwords don't match."));
       return;
     }
 
@@ -191,7 +207,7 @@ function PasswordCard({ email }: { email?: string }) {
       <form onSubmit={submit} className="space-y-3">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-            Current password
+            {t("Current password")}
           </label>
           <PasswordInput
             required
@@ -202,11 +218,11 @@ function PasswordCard({ email }: { email?: string }) {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-            New password
+            {t("New password")}
           </label>
           <PasswordInput
             required
-            placeholder="At least 8 characters"
+            placeholder={t("At least 8 characters")}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className={inputClass}
@@ -214,7 +230,7 @@ function PasswordCard({ email }: { email?: string }) {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-            Confirm new password
+            {t("Confirm new password")}
           </label>
           <PasswordInput
             required
@@ -225,7 +241,7 @@ function PasswordCard({ email }: { email?: string }) {
         </div>
 
         {error && <p className="text-xs font-medium text-red-500">{error}</p>}
-        {success && <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Password updated.</p>}
+        {success && <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{t("Password updated.")}</p>}
 
         <div className="flex items-center gap-3">
           <button
@@ -233,13 +249,13 @@ function PasswordCard({ email }: { email?: string }) {
             disabled={isSubmitting}
             className="rounded-full bg-cyan-500 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isSubmitting ? "Updating..." : "Update password"}
+            {isSubmitting ? t("Updating...") : t("Update password")}
           </button>
           <Link
             href={email ? `/forgot-password?email=${encodeURIComponent(email)}` : "/forgot-password"}
             className="text-xs font-medium text-slate-500 hover:text-cyan-600 hover:underline dark:text-slate-400 dark:hover:text-cyan-400"
           >
-            Forgot your current password?
+            {t("Forgot your current password?")}
           </Link>
         </div>
       </form>
@@ -248,6 +264,7 @@ function PasswordCard({ email }: { email?: string }) {
 }
 
 function NotificationPreferencesCard({ user }: { user: PublicUser }) {
+  const t = useTranslate();
   const [muted, setMuted] = useState<Set<NotificationType>>(new Set(user.mutedNotificationTypes));
   const [error, setError] = useState<string | null>(null);
 
@@ -275,7 +292,7 @@ function NotificationPreferencesCard({ user }: { user: PublicUser }) {
             >
               <span className="flex min-w-0 items-center gap-2.5">
                 <Icon className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
-                <span className="text-sm text-slate-700 dark:text-slate-200">{label}</span>
+                <span className="text-sm text-slate-700 dark:text-slate-200">{t(label)}</span>
               </span>
               <button
                 type="button"
@@ -302,6 +319,7 @@ function NotificationPreferencesCard({ user }: { user: PublicUser }) {
 }
 
 function BlockedAccountsCard() {
+  const t = useTranslate();
   const [blocked, setBlocked] = useState<BlockedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -332,9 +350,9 @@ function BlockedAccountsCard() {
     <Card title="Blocked accounts" subtitle="Accounts you won't see or hear from.">
       {error && <p className="mb-2 text-xs font-medium text-red-500">{error}</p>}
       {isLoading ? (
-        <p className="text-xs text-slate-400 dark:text-slate-500">Loading...</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500">{t("Loading...")}</p>
       ) : blocked.length === 0 ? (
-        <p className="text-xs text-slate-400 dark:text-slate-500">You haven&apos;t blocked anyone.</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500">{t("You haven't blocked anyone.")}</p>
       ) : (
         <div className="space-y-1.5">
           {blocked.map((u) => (
@@ -352,7 +370,7 @@ function BlockedAccountsCard() {
                 onClick={() => unblock(u.handle)}
                 className="shrink-0 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
               >
-                Unblock
+                {t("Unblock")}
               </button>
             </div>
           ))}
@@ -363,8 +381,9 @@ function BlockedAccountsCard() {
 }
 
 function LogoutCard() {
+  const t = useTranslate();
   async function handleLogout() {
-    if (!window.confirm("Log out of AnonSpace?")) return;
+    if (!window.confirm(t("Log out of AnonSpace?"))) return;
     try {
       await authApi.logout();
     } finally {
@@ -382,13 +401,14 @@ function LogoutCard() {
         className="flex items-center gap-2 rounded-full bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-600 transition-all duration-200 hover:bg-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-500/20"
       >
         <LogOut className="h-3.5 w-3.5" />
-        Log Out
+        {t("Log Out")}
       </button>
     </Card>
   );
 }
 
 export default function SettingsPage() {
+  const t = useTranslate();
   const [user, setUser] = useState<PublicUser | null>(null);
 
   useEffect(() => {
@@ -398,11 +418,12 @@ export default function SettingsPage() {
   return (
     <main className="col-span-1 space-y-4 lg:col-span-2">
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100">Setting</h1>
-        <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">Appearance and account preferences.</p>
+        <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("Setting")}</h1>
+        <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{t("Appearance and account preferences.")}</p>
       </div>
 
       <AppearanceCard />
+      <LanguageCard />
 
       {user && <AccountCard user={user} onHandleChange={(handle) => setUser({ ...user, handle })} />}
 

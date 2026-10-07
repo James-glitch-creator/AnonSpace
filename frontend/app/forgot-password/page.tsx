@@ -7,6 +7,7 @@ import { Suspense, useState, type FormEvent } from "react";
 import PasswordInput from "@/components/password-input";
 import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 import { ApiError, authApi } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 type Step = "email" | "otp" | "password" | "done";
 
@@ -14,6 +15,7 @@ type Step = "email" | "otp" | "password" | "done";
  *  just against an account that already exists, and ending in "go log in" instead of an
  *  auto-created session. */
 function ForgotPasswordForm() {
+  const t = useTranslate();
   const router = useRouter();
   // Settings links here with the signed-in account's own email already known - no reason
   // to make someone retype what the app can already see.
@@ -106,21 +108,20 @@ function ForgotPasswordForm() {
           </span>
           <div>
             <h1 className="text-2xl font-extrabold leading-tight text-white">
-              Speak Freely.
+              {t("Speak Freely.")}
               <br />
-              <span className="text-cyan-400">Stay Anonymous.</span>
+              <span className="text-cyan-400">{t("Stay Anonymous.")}</span>
             </h1>
             <p className="mt-2 text-sm text-slate-400">
-              Join millions who trust AnonSpace to protect their identity while sharing what
-              matters most.
+              {t("Join millions who trust AnonSpace to protect their identity while sharing what matters most.")}
             </p>
           </div>
           <div className="flex flex-wrap gap-4 text-xs text-slate-500">
             <span className="flex items-center gap-1.5">
-              <Lock className="h-3.5 w-3.5 text-cyan-500" /> End-to-end encrypted
+              <Lock className="h-3.5 w-3.5 text-cyan-500" /> {t("End-to-end encrypted")}
             </span>
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-cyan-500" /> Zero-knowledge
+              <ShieldCheck className="h-3.5 w-3.5 text-cyan-500" /> {t("Zero-knowledge")}
             </span>
           </div>
         </div>
@@ -128,16 +129,15 @@ function ForgotPasswordForm() {
         <div className="border-t border-slate-800 bg-slate-950/60 p-8 md:border-l md:border-t-0">
           {step === "email" && (
             <>
-              <h2 className="mb-1 text-lg font-bold text-white">Reset Your Password</h2>
+              <h2 className="mb-1 text-lg font-bold text-white">{t("Reset Your Password")}</h2>
               <p className="mb-6 text-xs text-slate-500">
-                Enter the email on your account and we&apos;ll send you a 6-digit code to verify
-                it&apos;s really you.
+                {t("Enter the email on your account and we'll send you a 6-digit code to verify it's really you.")}
               </p>
 
               <form className="space-y-4" onSubmit={handleRequestOtp}>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-400">
-                    Email Address
+                    {t("Email Address")}
                   </label>
                   <input
                     type="email"
@@ -155,7 +155,7 @@ function ForgotPasswordForm() {
                   disabled={isSubmitting}
                   className="w-full rounded-full bg-cyan-500 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSubmitting ? "Sending code..." : "Send Verification Code"}
+                  {t(isSubmitting ? "Sending code..." : "Send Verification Code")}
                 </button>
               </form>
             </>
@@ -163,15 +163,15 @@ function ForgotPasswordForm() {
 
           {step === "otp" && (
             <>
-              <h2 className="mb-1 text-lg font-bold text-white">Check Your Email</h2>
+              <h2 className="mb-1 text-lg font-bold text-white">{t("Check Your Email")}</h2>
               <p className="mb-6 text-xs text-slate-500">
-                Enter the 6-digit code we sent to <span className="text-slate-300">{email}</span>.
+                {t("Enter the 6-digit code we sent to")} <span className="text-slate-300">{email}</span>.
               </p>
 
               <form className="space-y-4" onSubmit={handleVerifyOtp}>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-400">
-                    Verification Code
+                    {t("Verification Code")}
                   </label>
                   <input
                     type="text"
@@ -196,7 +196,7 @@ function ForgotPasswordForm() {
                   disabled={isSubmitting || isResending}
                   className="w-full rounded-full bg-cyan-500 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSubmitting ? "Verifying..." : "Verify Code"}
+                  {t(isSubmitting ? "Verifying..." : "Verify Code")}
                 </button>
 
                 <button
@@ -206,10 +206,10 @@ function ForgotPasswordForm() {
                   className="w-full text-center text-xs font-semibold text-cyan-400 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isResending
-                    ? "Resending code..."
+                    ? t("Resending code...")
                     : resendCooldown > 0
-                      ? `Resend code in ${resendCooldown}s`
-                      : "Resend code"}
+                      ? `${t("Resend code in")} ${resendCooldown}s`
+                      : t("Resend code")}
                 </button>
 
                 <button
@@ -222,7 +222,7 @@ function ForgotPasswordForm() {
                   }}
                   className="w-full text-center text-xs font-medium text-slate-500 hover:text-slate-300"
                 >
-                  Use a different email
+                  {t("Use a different email")}
                 </button>
               </form>
             </>
@@ -230,36 +230,36 @@ function ForgotPasswordForm() {
 
           {step === "password" && (
             <>
-              <h2 className="mb-1 text-lg font-bold text-white">Set a New Password</h2>
+              <h2 className="mb-1 text-lg font-bold text-white">{t("Set a New Password")}</h2>
               <p className="mb-6 text-xs text-slate-500">
-                Email verified. Choose a new password for your account.
+                {t("Email verified. Choose a new password for your account.")}
               </p>
 
               <form className="space-y-4" onSubmit={handleResetPassword}>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-400">
-                    New Password
+                    {t("New Password")}
                   </label>
                   <PasswordInput
                     required
                     minLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter at least 8 characters"
+                    placeholder={t("Enter at least 8 characters")}
                     className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
                   />
                 </div>
 
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-400">
-                    Confirm New Password
+                    {t("Confirm New Password")}
                   </label>
                   <PasswordInput
                     required
                     minLength={8}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter your new password"
+                    placeholder={t("Re-enter your new password")}
                     className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10"
                   />
                 </div>
@@ -271,7 +271,7 @@ function ForgotPasswordForm() {
                   disabled={isSubmitting}
                   className="w-full rounded-full bg-cyan-500 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSubmitting ? "Updating..." : "Reset Password"}
+                  {t(isSubmitting ? "Updating..." : "Reset Password")}
                 </button>
               </form>
             </>
@@ -279,9 +279,9 @@ function ForgotPasswordForm() {
 
           {step === "done" && (
             <>
-              <h2 className="mb-1 text-lg font-bold text-white">Password Updated</h2>
+              <h2 className="mb-1 text-lg font-bold text-white">{t("Password Updated")}</h2>
               <p className="mb-6 text-xs text-slate-500">
-                Your password has been reset. Log in with your new password.
+                {t("Your password has been reset. Log in with your new password.")}
               </p>
 
               <button
@@ -289,16 +289,16 @@ function ForgotPasswordForm() {
                 onClick={() => router.push("/login")}
                 className="w-full rounded-full bg-cyan-500 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-cyan-600"
               >
-                Go to Log In
+                {t("Go to Log In")}
               </button>
             </>
           )}
 
           {step !== "done" && (
             <p className="mt-6 text-center text-xs text-slate-500">
-              Remembered it after all?{" "}
+              {t("Remembered it after all?")}{" "}
               <Link href="/login" className="font-semibold text-cyan-400 hover:underline">
-                Log In
+                {t("Log In")}
               </Link>
             </p>
           )}

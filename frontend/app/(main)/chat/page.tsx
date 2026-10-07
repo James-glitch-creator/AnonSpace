@@ -13,6 +13,7 @@ import {
   type UserSearchResult,
 } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/format";
+import { useLanguage, useTranslate } from "@/lib/language";
 
 function UserRow({
   handle,
@@ -35,12 +36,14 @@ function UserRow({
   onMessage: () => void;
   onToggleBlock: () => void;
 }) {
+  const t = useTranslate();
+  const language = useLanguage();
   return (
     <div className="flex items-center gap-1 rounded-xl px-1 py-1 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800">
       <button
         type="button"
         disabled={disableMessage}
-        title={disableMessage ? "Admins can't message other accounts" : undefined}
+        title={disableMessage ? t("Admins can't message other accounts") : undefined}
         onClick={onMessage}
         className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-2 py-1.5 text-left disabled:cursor-not-allowed disabled:opacity-60"
       >
@@ -61,7 +64,7 @@ function UserRow({
             {handle}
           </span>
           {isBlocked ? (
-            <span className="text-[11px] font-medium text-rose-500">Blocked</span>
+            <span className="text-[11px] font-medium text-rose-500">{t("Blocked")}</span>
           ) : (
             lastMessage && (
               <span
@@ -71,7 +74,7 @@ function UserRow({
                     : "text-slate-400 dark:text-slate-500"
                 }`}
               >
-                {lastMessageSentByMe ? "You: " : ""}
+                {lastMessageSentByMe ? `${t("You")}: ` : ""}
                 {lastMessage}
               </span>
             )
@@ -79,7 +82,7 @@ function UserRow({
         </span>
         {timestamp && (
           <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">
-            {formatRelativeTime(timestamp)}
+            {formatRelativeTime(timestamp, language)}
           </span>
         )}
       </button>
@@ -101,6 +104,7 @@ function UserRow({
 }
 
 export default function ChatPage() {
+  const t = useTranslate();
   const { openChatWith } = useChat();
   const [threads, setThreads] = useState<ChatThread[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -159,11 +163,11 @@ export default function ChatPage() {
 
   return (
     <main className="col-span-1 space-y-4 lg:col-span-2">
-      <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Private Chat</h1>
+      <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{t("Private Chat")}</h1>
 
       {isMod ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 text-xs text-slate-400 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
-          Admins can&apos;t message other accounts.
+          {t("Admins can't message other accounts.")}
         </div>
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -173,7 +177,7 @@ export default function ChatPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               type="text"
-              placeholder="Search accounts to message..."
+              placeholder={t("Search accounts to message...")}
               className="w-full rounded-full border border-slate-200 bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500 dark:focus:border-cyan-500"
             />
           </div>
@@ -185,10 +189,10 @@ export default function ChatPage() {
       {hasQuery ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           {results === null ? (
-            <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Searching...</p>
+            <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">{t("Searching...")}</p>
           ) : results.length === 0 ? (
             <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-              No accounts match &ldquo;{query.trim()}&rdquo;.
+              {t("No accounts match")} “{query.trim()}”.
             </p>
           ) : (
             <div className="space-y-1">
@@ -208,13 +212,12 @@ export default function ChatPage() {
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           {isLoading ? (
-            <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>
+            <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading...")}</p>
           ) : threads.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-10 text-center">
               <MessageCircle className="h-8 w-8 text-slate-300 dark:text-slate-600" />
               <p className="text-sm text-slate-400 dark:text-slate-500">
-                No conversations yet. Search for an account above, or tap someone&apos;s name on a
-                post or comment to message them.
+                {t("No conversations yet. Search for an account above, or tap someone's name on a post or comment to message them.")}
               </p>
             </div>
           ) : (

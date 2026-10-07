@@ -2,6 +2,7 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useSyncExternalStore } from "react";
+import { useTranslate } from "@/lib/language";
 
 const STORAGE_KEY = "anonspace-theme";
 
@@ -42,12 +43,13 @@ export function setTheme(dark: boolean) {
 
 export function ThemeToggle() {
   const isDark = useIsDarkTheme();
+  const t = useTranslate();
 
   return (
     <button
       type="button"
       onClick={() => setTheme(!isDark)}
-      aria-label="Toggle theme"
+      aria-label={t("Toggle theme")}
       className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-cyan-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-cyan-400"
     >
       {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}

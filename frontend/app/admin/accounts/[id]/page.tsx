@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { TypeBadge } from "@/components/admin/type-badge";
 import { adminApi, ApiError, type AdminAction, type PublicUser } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/format";
+import { useLanguage, useTranslate } from "@/lib/language";
 
 const TYPE_BADGE: Record<AdminAction["targetType"], "Post" | "Comment" | "User" | "Community"> = {
   post: "Post",
@@ -15,6 +16,8 @@ const TYPE_BADGE: Record<AdminAction["targetType"], "Post" | "Comment" | "User" 
 };
 
 export default function AdminAccountActionsPage() {
+  const t = useTranslate();
+  const language = useLanguage();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [admin, setAdmin] = useState<PublicUser | null>(null);
@@ -41,13 +44,13 @@ export default function AdminAccountActionsPage() {
         className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        Back
+        {t("Back")}
       </button>
 
       {error && <p className="text-xs font-medium text-red-500">{error}</p>}
 
       {isLoading ? (
-        <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>
+        <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading...")}</p>
       ) : admin ? (
         <>
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -65,7 +68,7 @@ export default function AdminAccountActionsPage() {
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="border-b border-slate-100 p-4 dark:border-slate-800">
               <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                {actions.length} action{actions.length === 1 ? "" : "s"}
+                {actions.length} {t("actions")}
               </h2>
             </div>
 
@@ -78,17 +81,17 @@ export default function AdminAccountActionsPage() {
               <table className="w-full min-w-[640px] table-fixed text-left text-sm">
                 <thead>
                   <tr className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                    <th className="px-4 py-2">Action</th>
-                    <th className="w-1/3 px-4 py-2">Content</th>
-                    <th className="w-1/3 px-4 py-2">Reason</th>
-                    <th className="px-4 py-2">When</th>
+                    <th className="px-4 py-2">{t("Action")}</th>
+                    <th className="w-1/3 px-4 py-2">{t("Content")}</th>
+                    <th className="w-1/3 px-4 py-2">{t("Reason")}</th>
+                    <th className="px-4 py-2">{t("When")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {actions.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="px-4 py-8 text-center text-xs text-slate-400 dark:text-slate-500">
-                        {admin.handle} hasn&apos;t taken any actions yet.
+                        {admin.handle} {t("hasn't taken any actions yet.")}
                       </td>
                     </tr>
                   ) : (
@@ -103,7 +106,7 @@ export default function AdminAccountActionsPage() {
                             }`}
                           >
                             {row.action === "ban" ? <Ban className="h-3 w-3" /> : <Check className="h-3 w-3" />}
-                            {row.action === "ban" ? "Banned" : "Dismissed"}
+                            {t(row.action === "ban" ? "Banned" : "Dismissed")}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -121,7 +124,7 @@ export default function AdminAccountActionsPage() {
                           {row.reason}
                         </td>
                         <td className="px-4 py-3 text-xs text-slate-400 dark:text-slate-500">
-                          {formatRelativeTime(row.at)}
+                          {formatRelativeTime(row.at, language)}
                         </td>
                       </tr>
                     ))
@@ -133,7 +136,7 @@ export default function AdminAccountActionsPage() {
         </>
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
-          Admin not found.
+          {t("Admin not found.")}
         </div>
       )}
     </div>

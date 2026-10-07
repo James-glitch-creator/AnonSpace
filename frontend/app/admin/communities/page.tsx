@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { adminApi, ApiError, type AdminCommunitySearchResult } from "@/lib/api";
 import { formatMemberCount } from "@/lib/format";
+import { useLanguage, useTranslate } from "@/lib/language";
 
 // Kept outside the component (like the Users search page's own cache) so the search
 // survives no matter how you get back to this page - browser back, or just clicking
@@ -13,6 +14,8 @@ let cachedQuery = "";
 let cachedResults: AdminCommunitySearchResult[] | null = null;
 
 export default function AdminCommunitiesPage() {
+  const t = useTranslate();
+  const language = useLanguage();
   const [query, setQuery] = useState(cachedQuery);
   const [results, setResults] = useState<AdminCommunitySearchResult[] | null>(cachedResults);
   const [error, setError] = useState<string | null>(null);
@@ -44,10 +47,9 @@ export default function AdminCommunitiesPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white">Communities</h1>
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white">{t("Communities")}</h1>
         <p className="text-xs text-slate-400 dark:text-slate-500">
-          Look up any community to review its posts and activity — includes private
-          communities, unlike the regular Communities page.
+          {t("Look up any community to review its posts and activity — includes private communities, unlike the regular Communities page.")}
         </p>
       </div>
 
@@ -59,7 +61,7 @@ export default function AdminCommunitiesPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             type="text"
-            placeholder="Search communities by name or slug..."
+            placeholder={t("Search communities by name or slug...")}
             className="w-full rounded-full border border-slate-200 bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500 dark:focus:border-cyan-500"
           />
         </div>
@@ -71,7 +73,7 @@ export default function AdminCommunitiesPage() {
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           {results.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-slate-400 dark:text-slate-500">
-              No communities match &ldquo;{query.trim()}&rdquo;.
+              {t("No communities match")} “{query.trim()}”.
             </p>
           ) : (
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -90,7 +92,7 @@ export default function AdminCommunitiesPage() {
                       )}
                     </span>
                     <span className="block text-xs text-slate-400 dark:text-slate-500">
-                      {formatMemberCount(c.memberCount)}
+                      {formatMemberCount(c.memberCount, language)}
                     </span>
                   </span>
                 </Link>

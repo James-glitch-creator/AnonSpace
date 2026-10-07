@@ -4,6 +4,7 @@ import { Ban, Calendar, ChevronDown, Globe, Lock, ScrollText, ShieldCheck, Trend
 import { useState } from "react";
 import type { AdminCommunityProfile } from "@/lib/api";
 import { formatDate, formatMemberCount } from "@/lib/format";
+import { useLanguage, useTranslate } from "@/lib/language";
 import { BanButton } from "./ban-button";
 
 const PERIOD_OPTIONS = [
@@ -27,6 +28,8 @@ export function AdminCommunitySidebar({
   /** Fired once this community is actually banned, so the page can flip its status badge. */
   onBanned?: () => void;
 }) {
+  const t = useTranslate();
+  const language = useLanguage();
   const [period, setPeriod] = useState<Period>("7d");
   const { stats } = community;
 
@@ -48,21 +51,21 @@ export function AdminCommunitySidebar({
             {community.status === "banned" ? (
               <span className="flex shrink-0 items-center gap-1 rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-semibold text-rose-600 dark:bg-rose-500/15 dark:text-rose-400">
                 <Ban className="h-3 w-3" />
-                Banned
+                {t("Banned")}
               </span>
             ) : (
               <BanButton targetType="community" targetId={community.slug} targetLabel={community.name} onBanned={onBanned} />
             )}
           </div>
           <p className="mt-1.5 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300">
-            {community.description || community.topic || "This community hasn't added an about description yet."}
+            {community.description || community.topic || t("This community hasn't added an about description yet.")}
           </p>
 
           <div className="mt-3 space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
             {community.createdAt && (
               <div className="flex items-center gap-2">
                 <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
-                Created {formatDate(community.createdAt)}
+                {t("Created")} {formatDate(community.createdAt)}
               </div>
             )}
             <div className="flex items-center gap-2">
@@ -71,22 +74,22 @@ export function AdminCommunitySidebar({
               ) : (
                 <Globe className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
               )}
-              {community.visibility === "private" ? "Private" : "Public"}
+              {t(community.visibility === "private" ? "Private" : "Public")}
             </div>
             <div className="flex items-center gap-2">
               <Users className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
-              {formatMemberCount(community.memberCount)}
+              {formatMemberCount(community.memberCount, language)}
             </div>
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-cyan-500" />
-              Admin: {community.creatorHandle ?? "— (no creator on record)"}
+              {t("Admin")}: {community.creatorHandle ?? t("(no creator on record)")}
             </div>
           </div>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            Post Activity
+            {t("Post Activity")}
           </h3>
 
           <div className="flex items-center justify-between gap-2">
@@ -97,7 +100,7 @@ export function AdminCommunitySidebar({
             >
               {PERIOD_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {t(opt.label)}
                 </option>
               ))}
             </select>
@@ -109,7 +112,7 @@ export function AdminCommunitySidebar({
           <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
             <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
               <TrendingDown className="h-3.5 w-3.5 shrink-0 text-rose-500" />
-              Banned rate
+              {t("Banned rate")}
             </span>
             <span className="text-xs font-semibold text-rose-500">
               {stats.bannedPercent}%{" "}
@@ -124,7 +127,7 @@ export function AdminCommunitySidebar({
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <h3 className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               <ScrollText className="h-3.5 w-3.5" />
-              {community.name} Rules
+              {community.name} {t("Rules")}
             </h3>
             <div className="space-y-0.5">
               {community.rules.map((rule, i) => (

@@ -13,6 +13,7 @@ import {
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { ApiError, commentsApi, getCurrentUser, isModerator, postsApi, type Comment } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/format";
+import { useLanguage, useTranslate } from "@/lib/language";
 import { BanButton } from "./admin/ban-button";
 import { ReportButton } from "./report-button";
 import { UserHandleMenu } from "./user-handle-menu";
@@ -34,6 +35,8 @@ export function CommentItem({
   onReplyAdded: (comment: Comment) => void;
   onDeleted: (id: string, parentId: string | null) => void;
 }) {
+  const t = useTranslate();
+  const language = useLanguage();
   const [upvotes, setUpvotes] = useState(comment.upvotes);
   const [downvotes, setDownvotes] = useState(comment.downvotes);
   const [myVote, setMyVote] = useState(comment.myVote);
@@ -110,7 +113,7 @@ export function CommentItem({
   }
 
   async function handleDelete() {
-    if (isDeleting || !window.confirm("Delete this comment? This can't be undone.")) return;
+    if (isDeleting || !window.confirm(t("Delete this comment? This can't be undone."))) return;
     setIsDeleting(true);
     setDeleteError(null);
     try {
@@ -163,10 +166,10 @@ export function CommentItem({
           interactive={!isOwnComment}
           className="text-sm font-semibold text-slate-800 dark:text-slate-100"
         >
-          {isOwnComment ? "Me" : comment.authorHandle}
+          {isOwnComment ? t("Me") : comment.authorHandle}
         </UserHandleMenu>
         <p className="text-xs text-slate-400 dark:text-slate-500">
-          {formatRelativeTime(comment.createdAt)}
+          {formatRelativeTime(comment.createdAt, language)}
         </p>
       </div>
 
@@ -177,14 +180,14 @@ export function CommentItem({
             : "text-slate-700 dark:text-slate-300"
         }`}
       >
-        {isBanned ? "Banned comment" : comment.body}
+        {isBanned ? t("Banned comment") : comment.body}
       </p>
 
       {!isBanned && <div className="mt-1.5 flex items-center gap-2 pl-9">
         <div className="flex items-center gap-0.5 rounded-full bg-slate-100 px-1 py-0.5 dark:bg-slate-800">
           <button
             type="button"
-            aria-label="Upvote"
+            aria-label={t("Upvote")}
             disabled={isVoting || isOwnComment || isMod}
             title={isMod ? "Admins can't vote" : isOwnComment ? "You can't vote on your own comment" : undefined}
             onClick={() => castVote("up")}
@@ -209,7 +212,7 @@ export function CommentItem({
           </span>
           <button
             type="button"
-            aria-label="Downvote"
+            aria-label={t("Downvote")}
             disabled={isVoting || isOwnComment || isMod}
             title={isMod ? "Admins can't vote" : isOwnComment ? "You can't vote on your own comment" : undefined}
             onClick={() => castVote("down")}
@@ -231,14 +234,14 @@ export function CommentItem({
           className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 dark:disabled:hover:bg-transparent"
         >
           <ReplyIcon className="h-3.5 w-3.5" />
-          Reply
+          {t("Reply")}
         </button>
 
         {isOwnComment && !isMod && (
           <button
             type="button"
-            aria-label="Delete comment"
-            title="Delete comment"
+            aria-label={t("Delete comment")}
+            title={t("Delete comment")}
             disabled={isDeleting}
             onClick={handleDelete}
             className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition-all duration-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
@@ -261,7 +264,7 @@ export function CommentItem({
           <div className="relative shrink-0" ref={menuRef}>
             <button
               type="button"
-              aria-label="Comment options"
+              aria-label={t("Comment options")}
               onClick={() => setIsMenuOpen((v) => !v)}
               className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             >
@@ -301,7 +304,7 @@ export function CommentItem({
             minLength={1}
             maxLength={2000}
             rows={2}
-            placeholder={`Reply to ${isOwnComment ? "Me" : comment.authorHandle}...`}
+            placeholder={`${t("Reply to")} ${isOwnComment ? t("Me") : comment.authorHandle}...`}
             className="w-full resize-none rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500"
           />
           {replyError && <p className="text-xs font-medium text-red-500">{replyError}</p>}
@@ -311,7 +314,7 @@ export function CommentItem({
               disabled={isSubmittingReply || !replyBody.trim()}
               className="rounded-full bg-cyan-500 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isSubmittingReply ? "Replying..." : "Reply"}
+              {t(isSubmittingReply ? "Replying..." : "Reply")}
             </button>
           </div>
         </form>
@@ -324,7 +327,7 @@ export function CommentItem({
           className="mt-2 flex items-center gap-1.5 pl-9 text-xs font-semibold text-cyan-600 transition-all duration-200 hover:underline dark:text-cyan-400"
         >
           <ChevronRight className="h-3.5 w-3.5" />
-          {replies.length} {replies.length === 1 ? "reply" : "replies"}
+          {replies.length} {t(replies.length === 1 ? "reply" : "replies")}
         </button>
       )}
 
@@ -357,7 +360,7 @@ export function CommentItem({
               className="flex items-center gap-1.5 pl-9 text-xs font-semibold text-slate-500 transition-all duration-200 hover:underline dark:text-slate-400"
             >
               <ChevronUp className="h-3.5 w-3.5" />
-              Hide
+              {t("Hide")}
             </button>
           )}
         </div>

@@ -4,6 +4,7 @@ import { Ban, Search as SearchIcon, ShieldCheck, VenetianMask } from "lucide-rea
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { adminApi, ApiError, type AdminUserSearchResult } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 // Kept outside the component (like getCurrentUser's cache in lib/api.ts) so the search
 // survives no matter how you get back to this page - browser back, or just clicking
@@ -12,6 +13,7 @@ let cachedQuery = "";
 let cachedResults: AdminUserSearchResult[] | null = null;
 
 export default function AdminUsersPage() {
+  const t = useTranslate();
   const [query, setQuery] = useState(cachedQuery);
   const [results, setResults] = useState<AdminUserSearchResult[] | null>(cachedResults);
   const [error, setError] = useState<string | null>(null);
@@ -43,10 +45,9 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white">Accounts</h1>
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white">{t("Accounts")}</h1>
         <p className="text-xs text-slate-400 dark:text-slate-500">
-          Look up any account to review its post history — admin-only, not available to regular
-          users.
+          {t("Look up any account to review its post history — admin-only, not available to regular users.")}
         </p>
       </div>
 
@@ -58,7 +59,7 @@ export default function AdminUsersPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             type="text"
-            placeholder="Search accounts by handle..."
+            placeholder={t("Search accounts by handle...")}
             className="w-full rounded-full border border-slate-200 bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500 dark:focus:border-cyan-500"
           />
         </div>
@@ -70,7 +71,7 @@ export default function AdminUsersPage() {
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           {results.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-slate-400 dark:text-slate-500">
-              No accounts match &ldquo;{query.trim()}&rdquo;.
+              {t("No accounts match")} “{query.trim()}”.
             </p>
           ) : (
             <div className="divide-y divide-slate-100 dark:divide-slate-800">

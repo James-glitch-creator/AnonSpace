@@ -1,10 +1,14 @@
+"use client";
+
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslate } from "@/lib/language";
 
 export function PaginationFooter({ from, to, total }: { from: number; to: number; total: number }) {
+  const t = useTranslate();
   return (
     <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-4 py-3 text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
       <span>
-        {from}-{to} of {total}
+        {from}-{to} {t("of")} {total}
       </span>
       <div className="flex items-center gap-1">
         <button

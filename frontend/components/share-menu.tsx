@@ -3,6 +3,7 @@
 import { Check, Copy, Send, Share2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useChat } from "./chat-context";
+import { useTranslate } from "@/lib/language";
 
 const COPIED_RESET_MS = 2000;
 
@@ -15,6 +16,7 @@ export function ShareMenu({
   disabled?: boolean;
   disabledReason?: string;
 }) {
+  const t = useTranslate();
   const { shareToChat } = useChat();
   const [isOpen, setIsOpen] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
@@ -67,7 +69,7 @@ export function ShareMenu({
         className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 dark:disabled:hover:bg-transparent"
       >
         {justCopied ? <Check className="h-4 w-4 text-emerald-500" /> : <Share2 className="h-4 w-4" />}
-        {justCopied ? "Copied!" : "Share"}
+        {t(justCopied ? "Copied!" : "Share")}
       </button>
 
       {isOpen && (
@@ -78,7 +80,7 @@ export function ShareMenu({
             className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             <Copy className="h-4 w-4" />
-            Copy link
+            {t("Copy link")}
           </button>
           <button
             type="button"
@@ -86,7 +88,7 @@ export function ShareMenu({
             className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             <Send className="h-4 w-4" />
-            Send to...
+            {t("Send to...")}
           </button>
         </div>
       )}

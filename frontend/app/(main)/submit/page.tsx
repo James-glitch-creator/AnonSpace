@@ -4,6 +4,7 @@ import { Image as ImageIcon, Video as VideoIcon, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
 import { ApiError, communitiesApi, postsApi, type Community } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 type MediaMode = "none" | "photos" | "video";
 
@@ -14,6 +15,7 @@ const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 const PUBLIC_SLUG = "public";
 
 function SubmitPostPageInner() {
+  const t = useTranslate();
   const router = useRouter();
   const searchParams = useSearchParams();
   // Lets a community's own "Create Post" button deep-link straight into posting there,
@@ -171,9 +173,9 @@ function SubmitPostPageInner() {
   return (
     <main className="col-span-1 space-y-4 lg:col-span-2">
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100">Create a Post</h1>
+        <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("Create a Post")}</h1>
         <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-          Share text, photos, or a video &mdash; anonymously.
+          {t("Share text, photos, or a video — anonymously.")}
         </p>
       </div>
 
@@ -183,7 +185,7 @@ function SubmitPostPageInner() {
       >
         <div className="flex items-center gap-2">
           <label className="text-xs font-medium text-slate-400 dark:text-slate-500">
-            Posting to
+            {t("Posting to")}
           </label>
 
           {isPicking ? (
@@ -196,13 +198,13 @@ function SubmitPostPageInner() {
                 onKeyDown={(e) => {
                   if (e.key === "Escape") setIsPicking(false);
                 }}
-                placeholder="Search your communities..."
+                placeholder={t("Search your communities...")}
                 className="rounded-full border border-cyan-400 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 outline-none dark:border-cyan-500 dark:bg-slate-950 dark:text-slate-200"
               />
               <div className="absolute left-0 top-full z-10 mt-1 w-48 space-y-0.5 rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-800 dark:bg-slate-900">
                 {communityOptions.length === 0 ? (
                   <p className="px-2 py-1.5 text-xs text-slate-400 dark:text-slate-500">
-                    No matches.
+                    {t("No matches.")}
                   </p>
                 ) : (
                   communityOptions.map((c) => (
@@ -216,7 +218,7 @@ function SubmitPostPageInner() {
                       className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                     >
                       <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${c.color}`} />
-                      {c.slug === PUBLIC_SLUG ? "Public" : c.name}
+                      {c.slug === PUBLIC_SLUG ? t("Public") : c.name}
                     </button>
                   ))
                 )}
@@ -229,7 +231,7 @@ function SubmitPostPageInner() {
               className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 transition-all duration-200 hover:border-cyan-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
             >
               <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${communityColor}`} />
-              {communitySlug === PUBLIC_SLUG ? "Public" : communityLabel}
+              {communitySlug === PUBLIC_SLUG ? t("Public") : communityLabel}
             </button>
           )}
         </div>
@@ -241,7 +243,7 @@ function SubmitPostPageInner() {
           minLength={1}
           maxLength={4000}
           rows={5}
-          placeholder="What's on your mind?"
+          placeholder={t("What's on your mind?")}
           className="w-full resize-none rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500"
         />
 
@@ -256,7 +258,7 @@ function SubmitPostPageInner() {
             }`}
           >
             <ImageIcon className="h-3.5 w-3.5" />
-            Photos
+            {t("Photos")}
           </button>
           <button
             type="button"
@@ -268,7 +270,7 @@ function SubmitPostPageInner() {
             }`}
           >
             <VideoIcon className="h-3.5 w-3.5" />
-            Video
+            {t("Video")}
           </button>
         </div>
 
@@ -293,7 +295,7 @@ function SubmitPostPageInner() {
                     <button
                       type="button"
                       onClick={() => removePhoto(i)}
-                      aria-label="Remove photo"
+                      aria-label={t("Remove photo")}
                       className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-white"
                     >
                       <X className="h-3 w-3" />
@@ -303,7 +305,7 @@ function SubmitPostPageInner() {
               </div>
             )}
             <p className="text-[11px] text-slate-400 dark:text-slate-500">
-              Up to {MAX_PHOTOS} photos, 8MB each.
+              {t("Up to 10 photos, 8MB each.")}
             </p>
           </div>
         )}
@@ -319,7 +321,7 @@ function SubmitPostPageInner() {
             {videoPreview && (
               <video src={videoPreview} controls className="max-h-64 w-full rounded-xl bg-black" />
             )}
-            <p className="text-[11px] text-slate-400 dark:text-slate-500">Up to 50MB.</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500">{t("Up to 50MB.")}</p>
           </div>
         )}
 
@@ -330,7 +332,7 @@ function SubmitPostPageInner() {
           disabled={isSubmitting || !communitySlug}
           className="rounded-full bg-cyan-500 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isSubmitting ? "Posting..." : "Post"}
+          {t(isSubmitting ? "Posting..." : "Post now")}
         </button>
       </form>
     </main>

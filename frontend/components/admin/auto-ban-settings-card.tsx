@@ -2,8 +2,10 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { adminApi, ApiError, type AutoBanSettings } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 export function AutoBanSettingsCard() {
+  const t = useTranslate();
   const [saved, setSaved] = useState<AutoBanSettings | null>(null);
   const [threshold, setThreshold] = useState("");
   const [minVotes, setMinVotes] = useState("");
@@ -62,37 +64,37 @@ export function AutoBanSettingsCard() {
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Automatic bans</h2>
+      <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t("Automatic bans")}</h2>
       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-        Superadmin only. Set the downvote percentage and minimum total votes required to automatically ban a post or comment.
+        {t("Superadmin only. Set the downvote percentage and minimum total votes required to automatically ban a post or comment.")}
       </p>
-      {isLoading && <p className="mt-3 text-sm text-slate-500" role="status">Loading settings...</p>}
+      {isLoading && <p className="mt-3 text-sm text-slate-500" role="status">{t("Loading settings...")}</p>}
       {saved && (
         <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-          Current rule: at least {saved.thresholdPercent}% downvotes after {saved.minVotes} total votes.
+          {t("Current rule: at least")} {saved.thresholdPercent}% {t("downvotes after")} {saved.minVotes} {t("total votes.")}
         </p>
       )}
       <form onSubmit={submit} className="mt-4 space-y-3">
         <fieldset disabled={isLoading || isSaving || !saved} className="grid min-w-0 gap-3 sm:grid-cols-2">
           <div>
-            <label htmlFor="auto-ban-threshold" className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">Downvote threshold (%)</label>
+            <label htmlFor="auto-ban-threshold" className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">{t("Downvote threshold (%)")}</label>
             <input id="auto-ban-threshold" type="number" required min={1} max={100} step={1} value={threshold}
               onChange={(event) => { setThreshold(event.target.value); setSuccess(false); }} className={inputClass} />
           </div>
           <div>
-            <label htmlFor="auto-ban-min-votes" className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">Minimum total votes</label>
+            <label htmlFor="auto-ban-min-votes" className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">{t("Minimum total votes")}</label>
             <input id="auto-ban-min-votes" type="number" required min={1} max={1000000} step={1} value={minVotes}
               onChange={(event) => { setMinVotes(event.target.value); setSuccess(false); }} className={inputClass} />
           </div>
         </fieldset>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Total votes means upvotes plus downvotes. Changes apply on the next vote check; existing bans stay in place.
+          {t("Total votes means upvotes plus downvotes. Changes apply on the next vote check; existing bans stay in place.")}
         </p>
         {error && <p role="alert" className="text-xs font-medium text-red-500">{error}</p>}
-        {success && <p role="status" className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Auto-ban settings saved.</p>}
+        {success && <p role="status" className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{t("Auto-ban settings saved.")}</p>}
         <button type="submit" disabled={!saved || isLoading || isSaving || unchanged}
           className="rounded-full bg-cyan-500 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-50">
-          {isSaving ? "Saving..." : "Save auto-ban settings"}
+          {t(isSaving ? "Saving..." : "Save auto-ban settings")}
         </button>
       </form>
     </section>

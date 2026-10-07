@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { authApi } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 import { MobileMenu } from "./mobile-menu";
 import { NotificationBell } from "./notification-bell";
 
 export function Navbar() {
+  const t = useTranslate();
   const router = useRouter();
   const [handle, setHandle] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -50,7 +52,7 @@ export function Navbar() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Find anything..."
+              placeholder={t("Find anything...")}
               className="w-full rounded-full border border-slate-200 bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500 dark:focus:border-cyan-500 dark:focus:bg-slate-900 dark:focus:ring-cyan-500/10"
             />
           </div>
@@ -69,7 +71,7 @@ export function Navbar() {
             className="flex items-center gap-1.5 rounded-full bg-cyan-500 px-3.5 py-2 text-xs font-semibold text-white transition-all duration-200 hover:bg-cyan-600"
           >
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Post</span>
+            <span className="hidden sm:inline">{t("Post now")}</span>
           </Link>
           <NotificationBell />
           <Link
@@ -77,7 +79,7 @@ export function Navbar() {
             className="ml-1 hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-100 py-1.5 pl-2.5 pr-3 text-sm font-medium text-slate-700 transition-all duration-200 hover:border-cyan-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 sm:flex"
           >
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            {handle ?? "Anonymous"}
+            {handle ?? t("Anonymous")}
           </Link>
         </div>
       </div>

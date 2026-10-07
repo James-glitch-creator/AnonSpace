@@ -7,6 +7,7 @@ import { AdminCommunitySidebar } from "@/components/admin/admin-community-sideba
 import { PostCard } from "@/components/post-card";
 import { POSTS_PAGE_SIZE, usePaginatedPosts } from "@/hooks/use-paginated-posts";
 import { adminApi, API_BASE_URL, type AdminCommunityProfile, type CommunityPostSort } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 const SORT_OPTIONS: { value: CommunityPostSort; label: string }[] = [
   { value: "new", label: "Latest to oldest" },
@@ -16,6 +17,7 @@ const SORT_OPTIONS: { value: CommunityPostSort; label: string }[] = [
 ];
 
 export default function AdminCommunityPage() {
+  const t = useTranslate();
   const { slug } = useParams<{ slug: string }>();
   const [community, setCommunity] = useState<AdminCommunityProfile | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -62,13 +64,13 @@ export default function AdminCommunityPage() {
   }, [slug, postQuery, postSort]);
 
   if (isLoading) {
-    return <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>;
+    return <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading...")}</p>;
   }
 
   if (notFound || !community) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
-        Community not found.
+        {t("Community not found.")}
       </div>
     );
   }
@@ -120,7 +122,7 @@ export default function AdminCommunityPage() {
               value={postQuery}
               onChange={(e) => setPostQuery(e.target.value)}
               type="text"
-              placeholder={`Search posts in ${community.name}...`}
+              placeholder={`${t("Search posts in")} ${community.name}...`}
               className="w-full rounded-full border border-slate-200 bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500 dark:focus:border-cyan-500"
             />
           </div>
@@ -131,17 +133,17 @@ export default function AdminCommunityPage() {
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.label}
+                {t(opt.label)}
               </option>
             ))}
           </select>
         </div>
 
         {isLoadingPosts ? (
-          <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>
+          <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading...")}</p>
         ) : posts.length === 0 ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
-            {postQuery.trim() ? `No posts match "${postQuery.trim()}".` : `No posts in ${community.name} yet.`}
+            {postQuery.trim() ? `${t("No posts match")} "${postQuery.trim()}".` : `${t("No posts yet in")} ${community.name}.`}
           </div>
         ) : (
           <>
@@ -157,17 +159,17 @@ export default function AdminCommunityPage() {
                   onClick={loadMore}
                   className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 hover:border-cyan-400 hover:text-cyan-600 dark:border-slate-700 dark:text-slate-300"
                 >
-                  Try again
+                  {t("Try again")}
                 </button>
               </div>
             )}
 
             {isLoadingMore && (
-              <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">Loading more...</p>
+              <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading more...")}</p>
             )}
             {!hasMore && !postsError && (
               <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-                That&apos;s everything.
+                {t("That's everything.")}
               </p>
             )}
           </>

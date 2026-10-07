@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from "react";
 import { ApiError, getCurrentUser, isModerator, postsApi, type Comment, type Post } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 import { CommentItem } from "./comment-item";
 import { PostCard } from "./post-card";
 
@@ -14,6 +15,7 @@ import { PostCard } from "./post-card";
  * same component) so the two never drift apart.
  */
 export function PostThread({ postId }: { postId: string }) {
+  const t = useTranslate();
   const router = useRouter();
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -108,7 +110,7 @@ export function PostThread({ postId }: { postId: string }) {
       className="flex items-center gap-1 text-sm font-medium text-slate-500 transition-all duration-200 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
     >
       <ChevronLeft className="h-4 w-4" />
-      Back
+      {t("Back")}
     </button>
   );
 
@@ -116,7 +118,7 @@ export function PostThread({ postId }: { postId: string }) {
     return (
       <div className="space-y-4">
         {backButton}
-        <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>
+        <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading...")}</p>
       </div>
     );
   }
@@ -126,7 +128,7 @@ export function PostThread({ postId }: { postId: string }) {
       <div className="space-y-4">
         {backButton}
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
-          Post not found.
+          {t("Post not found.")}
         </div>
       </div>
     );
@@ -139,12 +141,12 @@ export function PostThread({ postId }: { postId: string }) {
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <h2 className="mb-3 text-sm font-bold text-slate-800 dark:text-slate-100">
-          {comments.length} Comments
+          {comments.length} {t("Comments")}
         </h2>
 
         {isMod ? (
           <p className="mb-4 rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-500">
-            Admins can&apos;t comment.
+            {t("Admins can't comment.")}
           </p>
         ) : (
           <form onSubmit={handleAddComment} className="mb-4 space-y-2">
@@ -156,7 +158,7 @@ export function PostThread({ postId }: { postId: string }) {
               minLength={1}
               maxLength={2000}
               rows={2}
-              placeholder="Add a comment..."
+              placeholder={t("Add a comment...")}
               className="w-full resize-none rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500"
             />
             {error && <p className="text-xs font-medium text-red-500">{error}</p>}
@@ -166,7 +168,7 @@ export function PostThread({ postId }: { postId: string }) {
                 disabled={isSubmitting || !body.trim()}
                 className="rounded-full bg-cyan-500 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isSubmitting ? "Commenting..." : "Comment"}
+                {t(isSubmitting ? "Commenting..." : "Comment")}
               </button>
             </div>
           </form>
@@ -174,7 +176,7 @@ export function PostThread({ postId }: { postId: string }) {
 
         {rootComments.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-            No comments yet.
+            {t("No comments yet.")}
           </p>
         ) : (
           <div className="space-y-4">

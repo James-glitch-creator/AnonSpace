@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { RightRail } from "@/components/right-rail";
 import { notificationsApi, type Notification, type NotificationType } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/format";
+import { translateNotification, useLanguage, useTranslate } from "@/lib/language";
 
 const ICONS: Record<NotificationType, React.ComponentType<{ className?: string }>> = {
   post_commented: MessageCircle,
@@ -17,6 +18,8 @@ const ICONS: Record<NotificationType, React.ComponentType<{ className?: string }
 };
 
 export default function NotificationsPage() {
+  const t = useTranslate();
+  const language = useLanguage();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -45,7 +48,7 @@ export default function NotificationsPage() {
     <>
       <main className="space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Notifications</h1>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{t("Notifications")}</h1>
           {unreadCount > 0 && (
             <button
               type="button"
@@ -53,14 +56,14 @@ export default function NotificationsPage() {
               className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-cyan-600 transition-all duration-200 hover:bg-cyan-50 dark:text-cyan-400 dark:hover:bg-cyan-500/10"
             >
               <CheckCheck className="h-3.5 w-3.5" />
-              Mark all read
+              {t("Mark all read")}
             </button>
           )}
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           {isLoading ? (
-            <p className="py-10 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>
+            <p className="py-10 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading...")}</p>
           ) : notifications.length === 0 ? (
             <p className="px-4 py-10 text-center text-sm text-slate-400 dark:text-slate-500">
               Nothing yet — comments, reports, and moderation updates will show up here.
@@ -92,10 +95,10 @@ export default function NotificationsPage() {
                           : "font-medium text-slate-800 dark:text-slate-100"
                       }`}
                     >
-                      {n.message}
+                      {translateNotification(language, n.message)}
                     </span>
                     <span className="mt-0.5 block text-xs text-slate-400 dark:text-slate-500">
-                      {formatRelativeTime(n.createdAt)}
+                      {formatRelativeTime(n.createdAt, language)}
                     </span>
                   </span>
                   {!n.isRead && (
@@ -105,7 +108,7 @@ export default function NotificationsPage() {
                       className="flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-medium text-cyan-600 transition-all duration-200 hover:bg-cyan-50 dark:text-cyan-400 dark:hover:bg-cyan-500/10"
                     >
                       <Check className="h-3.5 w-3.5" />
-                      Mark as read
+                      {t("Mark as read")}
                     </button>
                   )}
                 </div>

@@ -2,6 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { useTranslate } from "@/lib/language";
 
 /** The "TODAY / LAST 7 DAYS / LAST 30 DAYS" picker pattern used across admin pages - kept
  *  generic over the option value so each page can use its own range type. */
@@ -14,6 +15,7 @@ export function RangeDropdown<T extends string>({
   options: { value: T; label: string }[];
   onChange: (value: T) => void;
 }) {
+  const t = useTranslate();
   const [open, setOpen] = useState(false);
   const current = options.find((o) => o.value === value);
 
@@ -24,7 +26,7 @@ export function RangeDropdown<T extends string>({
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
       >
-        {(current?.label ?? "").toUpperCase()}
+        {t(current?.label ?? "").toUpperCase()}
         <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
@@ -43,7 +45,7 @@ export function RangeDropdown<T extends string>({
                   : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
               }`}
             >
-              {opt.label}
+              {t(opt.label)}
             </button>
           ))}
         </div>

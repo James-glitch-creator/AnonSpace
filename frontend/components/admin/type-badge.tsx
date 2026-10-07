@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslate } from "@/lib/language";
+
 const STYLES: Record<string, string> = {
   Post: "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-400",
   Comment: "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-500/15 dark:text-fuchsia-400",
@@ -6,11 +10,12 @@ const STYLES: Record<string, string> = {
 };
 
 export function TypeBadge({ type }: { type: "Post" | "Comment" | "User" | "Community" }) {
+  const t = useTranslate();
   return (
     <span
       className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${STYLES[type]}`}
     >
-      {type}
+      {t(type)}
     </span>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { chatApi } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 const UNREAD_POLL_INTERVAL_MS = 15000;
 
@@ -17,6 +18,7 @@ const links = [
 ];
 
 export function MobileNav() {
+  const t = useTranslate();
   const pathname = usePathname();
   const [hasUnreadChat, setHasUnreadChat] = useState(false);
 
@@ -53,7 +55,7 @@ export function MobileNav() {
                 <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-cyan-500 ring-2 ring-white dark:ring-slate-950" />
               )}
             </span>
-            {label}
+            {t(label)}
           </Link>
         );
       })}

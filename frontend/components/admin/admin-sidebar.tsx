@@ -17,6 +17,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { authApi, getCurrentUser, type PublicUser, type ReportTargetType } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 const overviewLink = { label: "Overview", href: "/admin", icon: LayoutGrid };
 
@@ -48,6 +49,7 @@ function navLinkClass(active: boolean): string {
 
 /** Split out only because it reads the URL - useSearchParams needs a Suspense boundary. */
 function ReportsNavItem({ onNavigate }: { onNavigate?: () => void }) {
+  const t = useTranslate();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const onReportsPage = pathname === "/admin/reports";
@@ -67,7 +69,7 @@ function ReportsNavItem({ onNavigate }: { onNavigate?: () => void }) {
       >
         <span className="flex items-center gap-3">
           <Flag className="h-4.5 w-4.5" />
-          Reports
+          {t("Reports")}
         </span>
         <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
@@ -85,7 +87,7 @@ function ReportsNavItem({ onNavigate }: { onNavigate?: () => void }) {
                   : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white"
               }`}
             >
-              {label}
+              {t(label)}
             </Link>
           ))}
         </div>
@@ -101,6 +103,7 @@ export function AdminSidebar({
   isMobileOpen: boolean;
   onCloseMobile: () => void;
 }) {
+  const t = useTranslate();
   const pathname = usePathname();
   const [user, setUser] = useState<PublicUser | null>(null);
 
@@ -111,7 +114,7 @@ export function AdminSidebar({
   const isSuperAdmin = user?.role === "superadmin";
 
   async function handleLogout() {
-    if (!window.confirm("Log out of AnonSpace?")) return;
+    if (!window.confirm(t("Log out of AnonSpace?"))) return;
     try {
       await authApi.logout();
     } finally {
@@ -131,7 +134,7 @@ export function AdminSidebar({
           className={navLinkClass(pathname === overviewLink.href)}
         >
           <overviewLink.icon className="h-4.5 w-4.5" />
-          {overviewLink.label}
+          {t(overviewLink.label)}
         </Link>
 
         {isSuperAdmin && (
@@ -141,20 +144,20 @@ export function AdminSidebar({
             className={navLinkClass(pathname.startsWith(superAdminLink.href))}
           >
             <superAdminLink.icon className="h-4.5 w-4.5" />
-            {superAdminLink.label}
+            {t(superAdminLink.label)}
           </Link>
         )}
 
         <Suspense fallback={<div className={navLinkClass(false)}>
           <Flag className="h-4.5 w-4.5" />
-          Reports
+          {t("Reports")}
         </div>}>
           <ReportsNavItem onNavigate={onNavigate} />
         </Suspense>
         {otherAdminLinks.map(({ label, href, icon: Icon }) => (
           <Link key={href} href={href} onClick={onNavigate} className={navLinkClass(pathname.startsWith(href))}>
             <Icon className="h-4.5 w-4.5" />
-            {label}
+            {t(label)}
           </Link>
         ))}
       </nav>
@@ -169,7 +172,7 @@ export function AdminSidebar({
           </span>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
-              {user?.handle ?? "Loading..."}
+              {user?.handle ?? t("Loading...")}
             </p>
             <p className="truncate text-xs text-slate-400 dark:text-slate-500">
               {isSuperAdmin ? "Superadmin" : "Admin"}
@@ -182,7 +185,7 @@ export function AdminSidebar({
           className="flex w-full items-center gap-3 px-4 pb-4 text-sm font-medium text-slate-600 transition-all duration-200 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400"
         >
           <LogOut className="h-4 w-4 shrink-0" />
-          Log Out
+          {t("Log Out")}
         </button>
       </div>
   );
@@ -205,7 +208,7 @@ export function AdminSidebar({
           <aside className="relative flex h-full w-72 max-w-[85vw] flex-col border-r border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950">
             <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 px-4 dark:border-slate-800">
               <div>
-                <p className="text-sm font-extrabold text-slate-900 dark:text-white">Admin navigation</p>
+                <p className="text-sm font-extrabold text-slate-900 dark:text-white">{t("Admin navigation")}</p>
                 <p className="text-xs text-slate-400 dark:text-slate-500">
                   {isSuperAdmin ? "Superadmin" : "Admin"}
                 </p>

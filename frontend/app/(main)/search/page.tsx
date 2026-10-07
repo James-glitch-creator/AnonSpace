@@ -8,12 +8,14 @@ import { PostCard } from "@/components/post-card";
 import { POSTS_PAGE_SIZE, usePaginatedPosts } from "@/hooks/use-paginated-posts";
 import { searchApi, type Community } from "@/lib/api";
 import { formatMemberCount } from "@/lib/format";
+import { useTranslate } from "@/lib/language";
 
 // "public" is the implicit default posting destination, not a real user-created
 // community — it shouldn't turn up as a discoverable search result.
 const NON_COMMUNITY_SLUGS = new Set(["public"]);
 
 function SearchPageInner() {
+  const t = useTranslate();
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") ?? "";
@@ -86,7 +88,7 @@ function SearchPageInner() {
           it here would show two search boxes on the same page. Below md the navbar
           collapses to just a search icon that links here, so this is the only input. */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:hidden">
-        <h1 className="mb-3 text-sm font-bold text-slate-800 dark:text-slate-100">Search</h1>
+        <h1 className="mb-3 text-sm font-bold text-slate-800 dark:text-slate-100">{t("Search")}</h1>
         <div className="relative">
           <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <input
@@ -94,7 +96,7 @@ function SearchPageInner() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             type="text"
-            placeholder="Search posts and communities..."
+            placeholder={t("Search posts and communities...")}
             className="w-full rounded-full border border-slate-200 bg-slate-100 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500 dark:focus:border-cyan-500"
           />
         </div>
@@ -103,7 +105,7 @@ function SearchPageInner() {
       {hasSearched && visibleCommunities.length > 0 && (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            Communities
+            {t("Communities")}
           </h2>
           <div className="space-y-1">
             {visibleCommunities.map((c) => (
@@ -131,10 +133,10 @@ function SearchPageInner() {
       )}
 
       {hasSearched && isInitialLoading ? (
-        <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>
+        <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading...")}</p>
       ) : hasSearched && !hasResults ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
-          No results for &ldquo;{query}&rdquo;.
+          {t("No results for")} “{query}”.
         </div>
       ) : (
         <>
@@ -150,17 +152,17 @@ function SearchPageInner() {
                 onClick={loadMore}
                 className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 hover:border-cyan-400 hover:text-cyan-600 dark:border-slate-700 dark:text-slate-300"
               >
-                Try again
+                {t("Try again")}
               </button>
             </div>
           )}
 
           {hasSearched && isLoadingMore && (
-            <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">Loading more...</p>
+            <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading more...")}</p>
           )}
           {hasSearched && visiblePosts.length > 0 && !hasMore && !error && (
             <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-              That&apos;s everything.
+              {t("That's everything.")}
             </p>
           )}
         </>

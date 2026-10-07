@@ -11,10 +11,13 @@ import {
   type CursorFeedState,
 } from "@/hooks/feed-state-cache";
 import { ApiError, postsApi, type Post } from "@/lib/api";
+import { translate, useLanguage, useTranslate } from "@/lib/language";
 
 const PAGE_SIZE = 10;
 
 export default function NewsFeedPage() {
+  const t = useTranslate();
+  const language = useLanguage();
   const cachedState = getFeedState<CursorFeedState>("home");
   const [posts, setPosts] = useState<Post[]>(cachedState?.posts ?? []);
   const [isInitialLoading, setIsInitialLoading] = useState(cachedState === null);
@@ -58,13 +61,13 @@ export default function NewsFeedPage() {
       hasMoreRef.current = result.nextCursor !== null;
       setHasMore(result.nextCursor !== null);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not load your feed.");
+      setError(err instanceof ApiError ? err.message : translate(language, "Could not load your feed."));
     } finally {
       isLoadingRef.current = false;
       setIsInitialLoading(false);
       setIsLoadingMore(false);
     }
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     if (isInitialLoading) return;
@@ -106,16 +109,16 @@ export default function NewsFeedPage() {
       <main className="space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">For You</h1>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{t("For You")}</h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Every public post, ranked by communities and creators you interact with.
+              {t("Every public post, ranked by communities and creators you interact with.")}
             </p>
           </div>
           <button
             type="button"
             onClick={() => void loadMore(true)}
             disabled={isInitialLoading || isLoadingMore}
-            aria-label="Refresh feed"
+            aria-label={t("Refresh feed")}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:text-cyan-600 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
           >
             <RefreshCw className={`h-4 w-4 ${isInitialLoading ? "animate-spin" : ""}`} />
@@ -126,7 +129,7 @@ export default function NewsFeedPage() {
           <FeedSkeleton />
         ) : posts.length === 0 ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
-            {error ? error : "No posts are available yet. Be the first to post!"}
+            {error ? error : t("No posts are available yet. Be the first to post!")}
           </div>
         ) : (
           <>
@@ -143,7 +146,7 @@ export default function NewsFeedPage() {
                   onClick={() => void loadMore()}
                   className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 hover:border-cyan-400 hover:text-cyan-600 dark:border-slate-700 dark:text-slate-300"
                 >
-                  Try again
+                  {t("Try again")}
                 </button>
               </div>
             )}
@@ -151,7 +154,7 @@ export default function NewsFeedPage() {
             {isLoadingMore && <FeedSkeleton count={2} />}
             {!hasMore && !error && (
               <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-                You&apos;re all caught up.
+                {t("You're all caught up.")}
               </p>
             )}
           </>

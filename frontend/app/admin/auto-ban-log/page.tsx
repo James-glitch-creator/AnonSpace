@@ -6,10 +6,12 @@ import { CategoryFilter } from "@/components/admin/category-filter";
 import { PaginationFooter } from "@/components/admin/pagination-footer";
 import { TypeBadge } from "@/components/admin/type-badge";
 import { adminApi, ApiError, type AutoBanSettings, type BanLogEntry } from "@/lib/api";
+import { useTranslate } from "@/lib/language";
 
 const CATEGORY_OPTIONS = ["All Categories", "Post Only", "Comment Only", "Account Only", "Community Only"];
 
 export default function BanLogPage() {
+  const t = useTranslate();
   const [category, setCategory] = useState(CATEGORY_OPTIONS[0]);
   const [logs, setLogs] = useState<BanLogEntry[]>([]);
   const [autoBanSettings, setAutoBanSettings] = useState<AutoBanSettings | null>(null);
@@ -38,10 +40,9 @@ export default function BanLogPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white">Ban Log</h1>
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white">{t("Ban Log")}</h1>
         <p className="text-xs text-slate-400 dark:text-slate-500">
-          Every post, comment, account, and community that&apos;s been banned — automatically
-          by the downvote system, or by an admin acting directly or confirming a report.
+          {t("Every post, comment, account, and community that's been banned — automatically by the downvote system, or by an admin acting directly or confirming a report.")}
         </p>
       </div>
 
@@ -60,24 +61,24 @@ export default function BanLogPage() {
           <table className="w-full min-w-[820px] table-fixed text-left text-sm">
             <thead>
               <tr className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                <th className="w-2/5 px-4 py-2">About</th>
-                <th className="px-4 py-2">Type</th>
-                <th className="px-4 py-2">Community</th>
-                <th className="px-4 py-2">Ratio</th>
-                <th className="px-4 py-2">Banned by</th>
+                <th className="w-2/5 px-4 py-2">{t("About")}</th>
+                <th className="px-4 py-2">{t("Type")}</th>
+                <th className="px-4 py-2">{t("Community")}</th>
+                <th className="px-4 py-2">{t("Ratio")}</th>
+                <th className="px-4 py-2">{t("Banned by")}</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-xs text-slate-400 dark:text-slate-500">
-                    Loading...
+                    {t("Loading...")}
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-xs text-slate-400 dark:text-slate-500">
-                    No bans yet.
+                    {t("No bans yet.")}
                   </td>
                 </tr>
               ) : (
@@ -111,7 +112,7 @@ export default function BanLogPage() {
                       ) : (
                         <span className="inline-flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
                           <Bot className="h-3.5 w-3.5" />
-                          Automatic
+                          {t("Automatic")}
                         </span>
                       )}
                     </td>
@@ -126,9 +127,9 @@ export default function BanLogPage() {
 
         <p className="border-t border-slate-100 px-4 py-3 text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
           {autoBanSettings
-            ? `Current automatic rule: at least ${autoBanSettings.thresholdPercent}% downvotes with a minimum of ${autoBanSettings.minVotes} total votes, checked when a vote is cast, changed, or removed. `
-            : "Loading the current automatic ban rule. "}
-          Earlier bans may have used different settings. Admin-confirmed bans record which admin approved them.
+            ? `${t("Current automatic rule: at least")} ${autoBanSettings.thresholdPercent}% ${t("downvotes with a minimum of")} ${autoBanSettings.minVotes} ${t("total votes, checked when a vote is cast, changed, or removed.")} `
+            : t("Loading the current automatic ban rule.")}
+          {" "}{t("Earlier bans may have used different settings. Admin-confirmed bans record which admin approved them.")}
         </p>
       </div>
     </div>

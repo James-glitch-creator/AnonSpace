@@ -8,8 +8,11 @@ import { PostCard } from "@/components/post-card";
 import { POSTS_PAGE_SIZE, usePaginatedPosts } from "@/hooks/use-paginated-posts";
 import { adminApi, type AdminUserProfile } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/format";
+import { useLanguage, useTranslate } from "@/lib/language";
 
 export default function AdminUserProfilePage() {
+  const t = useTranslate();
+  const language = useLanguage();
   const { handle } = useParams<{ handle: string }>();
   const [profile, setProfile] = useState<AdminUserProfile | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -53,13 +56,13 @@ export default function AdminUserProfilePage() {
   }, [handle]);
 
   if (isLoading) {
-    return <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>;
+    return <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading...")}</p>;
   }
 
   if (notFound || !profile) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
-        Account not found.
+        {t("Account not found.")}
       </div>
     );
   }
@@ -77,7 +80,7 @@ export default function AdminUserProfilePage() {
             </h1>
             {profile.createdAt && (
               <p className="text-xs text-slate-400 dark:text-slate-500">
-                Joined {formatRelativeTime(profile.createdAt)}
+                {t("Joined")} {formatRelativeTime(profile.createdAt, language)}
               </p>
             )}
           </div>
@@ -85,7 +88,7 @@ export default function AdminUserProfilePage() {
             {profile.status === "banned" && (
               <span className="flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-semibold text-rose-600 dark:bg-rose-500/15 dark:text-rose-400">
                 <Ban className="h-3 w-3" />
-                Banned
+                {t("Banned")}
               </span>
             )}
             {(profile.role === "admin" || profile.role === "superadmin") && (
@@ -109,10 +112,10 @@ export default function AdminUserProfilePage() {
       </div>
 
       {isLoadingPosts ? (
-        <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">Loading...</p>
+        <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading...")}</p>
       ) : posts.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-400 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
-          {profile.handle} hasn&apos;t posted anything.
+          {profile.handle} {t("hasn't posted anything.")}
         </div>
       ) : (
         <div className="space-y-4">
@@ -128,17 +131,17 @@ export default function AdminUserProfilePage() {
                 onClick={loadMore}
                 className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 hover:border-cyan-400 hover:text-cyan-600 dark:border-slate-700 dark:text-slate-300"
               >
-                Try again
+                {t("Try again")}
               </button>
             </div>
           )}
 
           {isLoadingMore && (
-            <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">Loading more...</p>
+            <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">{t("Loading more...")}</p>
           )}
           {!hasMore && !postsError && (
             <p className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
-              That&apos;s everything.
+              {t("That's everything.")}
             </p>
           )}
         </div>

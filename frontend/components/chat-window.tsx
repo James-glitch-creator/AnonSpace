@@ -25,6 +25,7 @@ import {
   type UserSearchResult,
 } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/format";
+import { useLanguage, useTranslate } from "@/lib/language";
 import { useIsDesktop } from "@/lib/use-is-desktop";
 import { useChat } from "./chat-context";
 
@@ -226,14 +227,15 @@ function ChatHeader({
   backLabel?: string;
   onCollapse?: () => void;
 }) {
+  const t = useTranslate();
   return (
     <div className="flex shrink-0 select-none items-center gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
       {onBack && (
         <button
           type="button"
           onClick={onBack}
-          aria-label={backLabel}
-          title="Back"
+          aria-label={t(backLabel)}
+          title={t("Back")}
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -246,8 +248,8 @@ function ChatHeader({
       <button
         type="button"
         onClick={onToggleBlock}
-        aria-label={isBlocked ? `Unblock ${handle}` : `Block ${handle}`}
-        title={isBlocked ? "Unblock" : "Block"}
+        aria-label={`${t(isBlocked ? "Unblock" : "Block")} ${handle}`}
+        title={t(isBlocked ? "Unblock" : "Block")}
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-rose-500 dark:hover:bg-slate-800 dark:hover:text-rose-400"
       >
         {isBlocked ? <ShieldOff className="h-4 w-4" /> : <UserX className="h-4 w-4" />}
@@ -256,8 +258,8 @@ function ChatHeader({
         <button
           type="button"
           onClick={onCollapse}
-          aria-label="Minimize chat"
-          title="Minimize"
+          aria-label={t("Minimize chat")}
+          title={t("Minimize")}
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
           <ChevronRight className="h-4 w-4" />
@@ -267,7 +269,7 @@ function ChatHeader({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close chat"
+          aria-label={t("Close chat")}
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
           <X className="h-4 w-4" />
@@ -288,10 +290,12 @@ function ChatMessages({
   currentUserId: ChatState["currentUserId"];
   scrollRef: RefObject<HTMLDivElement | null>;
 }) {
+  const t = useTranslate();
+  const language = useLanguage();
   return (
     <div ref={scrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
       {messages.length === 0 ? (
-        <p className="py-6 text-center text-xs text-slate-400 dark:text-slate-500">Say hello to {handle}.</p>
+        <p className="py-6 text-center text-xs text-slate-400 dark:text-slate-500">{t("Say hello to")} {handle}.</p>
       ) : (
         messages.map((m) => (
           <div
@@ -306,7 +310,7 @@ function ChatMessages({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={`${API_BASE_URL}${m.mediaUrl}`}
-                alt="Attachment"
+                alt={t("Attachment")}
                 className={`max-h-56 w-full rounded-lg object-cover ${m.body ? "mb-1.5" : ""}`}
               />
             )}
@@ -327,7 +331,7 @@ function ChatMessages({
                 m.senderId === currentUserId ? "text-cyan-50/80" : "text-slate-400 dark:text-slate-500"
               }`}
             >
-              {formatRelativeTime(m.createdAt)}
+              {formatRelativeTime(m.createdAt, language)}
             </span>
           </div>
         ))
@@ -373,19 +377,20 @@ function ChatFooter({
   state: ChatState;
   attachInputRef: RefObject<HTMLInputElement | null>;
 }) {
+  const t = useTranslate();
   return (
     <>
       {state.error && <p className="shrink-0 px-3 pb-1 text-xs font-medium text-red-500">{state.error}</p>}
 
       {state.isBlocked ? (
         <div className="flex shrink-0 items-center justify-between gap-2 border-t border-slate-200 p-2.5 dark:border-slate-800">
-          <p className="text-xs text-slate-400 dark:text-slate-500">You&apos;ve blocked this account.</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500">{t("You've blocked this account.")}</p>
           <button
             type="button"
             onClick={state.toggleBlock}
             className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold text-cyan-600 transition-all duration-200 hover:bg-cyan-50 dark:text-cyan-400 dark:hover:bg-cyan-500/10"
           >
-            Unblock
+            {t("Unblock")}
           </button>
         </div>
       ) : (
@@ -397,7 +402,7 @@ function ChatFooter({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={state.attachment.previewUrl}
-                    alt="Selected attachment"
+                    alt={t("Selected attachment")}
                     className="h-14 w-14 rounded-lg object-cover"
                   />
                 ) : (
@@ -406,7 +411,7 @@ function ChatFooter({
                 <button
                   type="button"
                   onClick={state.clearAttachment}
-                  aria-label="Remove attachment"
+                  aria-label={t("Remove attachment")}
                   className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-800 text-white shadow hover:bg-slate-900"
                 >
                   <X className="h-3 w-3" />
@@ -426,8 +431,8 @@ function ChatFooter({
               type="button"
               onClick={() => attachInputRef.current?.click()}
               disabled={!state.threadId}
-              aria-label="Attach a photo or video"
-              title="Attach a photo or video"
+              aria-label={t("Attach a photo or video")}
+              title={t("Attach a photo or video")}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-cyan-500 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
             >
               <Paperclip className="h-4 w-4" />
@@ -437,13 +442,13 @@ function ChatFooter({
               value={state.body}
               onChange={(e) => state.setBody(e.target.value)}
               disabled={!state.threadId}
-              placeholder="Send an anonymous message..."
+              placeholder={t("Send an anonymous message...")}
               className="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-100 px-3.5 py-2 text-sm text-slate-700 outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
             />
             <button
               type="submit"
               disabled={!state.threadId || state.isSending || (!state.body.trim() && !state.attachment)}
-              aria-label="Send message"
+              aria-label={t("Send message")}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-500 text-white transition-all duration-200 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Send className="h-4 w-4" />
@@ -596,12 +601,14 @@ function ThreadRow({
   onSelect: () => void;
   onToggleBlock: () => void;
 }) {
+  const t = useTranslate();
+  const language = useLanguage();
   return (
     <div className="group flex items-center gap-1 rounded-xl px-1 py-1 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800">
       <button
         type="button"
         disabled={disableMessage}
-        title={disableMessage ? "Admins can't message other accounts" : undefined}
+        title={disableMessage ? t("Admins can't message other accounts") : undefined}
         onClick={onSelect}
         className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-left disabled:cursor-not-allowed disabled:opacity-60"
       >
@@ -622,12 +629,12 @@ function ThreadRow({
             </span>
             {timestamp && (
               <span className="shrink-0 text-[10px] text-slate-400 dark:text-slate-500">
-                {formatRelativeTime(timestamp)}
+                {formatRelativeTime(timestamp, language)}
               </span>
             )}
           </span>
           {isBlocked ? (
-            <span className="block text-[11px] font-medium text-rose-500">Blocked</span>
+            <span className="block text-[11px] font-medium text-rose-500">{t("Blocked")}</span>
           ) : (
             lastMessage && (
               <span
@@ -635,7 +642,7 @@ function ThreadRow({
                   isUnread ? "font-semibold text-slate-600 dark:text-slate-300" : "text-slate-400 dark:text-slate-500"
                 }`}
               >
-                {lastMessageSentByMe ? "You: " : ""}
+                {lastMessageSentByMe ? `${t("You")}: ` : ""}
                 {lastMessage}
               </span>
             )
@@ -645,8 +652,8 @@ function ThreadRow({
       <button
         type="button"
         onClick={onToggleBlock}
-        aria-label={isBlocked ? `Unblock ${handle}` : `Block ${handle}`}
-        title={isBlocked ? "Unblock" : "Block"}
+        aria-label={`${t(isBlocked ? "Unblock" : "Block")} ${handle}`}
+        title={t(isBlocked ? "Unblock" : "Block")}
         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all duration-200 ${
           isBlocked
             ? "text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
@@ -662,6 +669,7 @@ function ThreadRow({
 // Default view of the desktop dock: the same search-and-thread-list content as the
 // standalone Private Chat page, condensed to fit the trending-community column's width.
 function ThreadListPanel({ onSelect, onCollapse }: { onSelect: (handle: string) => void; onCollapse: () => void }) {
+  const t = useTranslate();
   const list = useThreadList();
   const hasQuery = list.query.trim() !== "";
 
@@ -669,12 +677,12 @@ function ThreadListPanel({ onSelect, onCollapse }: { onSelect: (handle: string) 
     <>
       <div className="flex shrink-0 items-center gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
         <MessageCircle className="h-5 w-5 shrink-0 text-cyan-500" />
-        <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">Private Chat</span>
+        <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">{t("Private Chat")}</span>
         <button
           type="button"
           onClick={onCollapse}
-          aria-label="Minimize chat"
-          title="Minimize"
+          aria-label={t("Minimize chat")}
+          title={t("Minimize")}
           className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
           <ChevronRight className="h-4 w-4" />
@@ -684,7 +692,7 @@ function ThreadListPanel({ onSelect, onCollapse }: { onSelect: (handle: string) 
       <div className="min-h-0 flex-1 overflow-y-auto p-3">
         {list.isMod ? (
           <p className="px-1 py-4 text-center text-xs text-slate-400 dark:text-slate-500">
-            Admins can&apos;t message other accounts.
+            {t("Admins can't message other accounts.")}
           </p>
         ) : (
           <div className="relative mb-3">
@@ -693,7 +701,7 @@ function ThreadListPanel({ onSelect, onCollapse }: { onSelect: (handle: string) 
               value={list.query}
               onChange={(e) => list.setQuery(e.target.value)}
               type="text"
-              placeholder="Search accounts to message..."
+              placeholder={t("Search accounts to message...")}
               className="w-full rounded-full border border-slate-200 bg-slate-100 py-2 pl-8 pr-3 text-xs text-slate-700 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-500 dark:focus:border-cyan-500"
             />
           </div>
@@ -703,10 +711,10 @@ function ThreadListPanel({ onSelect, onCollapse }: { onSelect: (handle: string) 
 
         {hasQuery ? (
           list.results === null ? (
-            <p className="py-6 text-center text-xs text-slate-400 dark:text-slate-500">Searching...</p>
+            <p className="py-6 text-center text-xs text-slate-400 dark:text-slate-500">{t("Searching...")}</p>
           ) : list.results.length === 0 ? (
             <p className="py-6 text-center text-xs text-slate-400 dark:text-slate-500">
-              No accounts match &ldquo;{list.query.trim()}&rdquo;.
+              {t("No accounts match")} “{list.query.trim()}”.
             </p>
           ) : (
             <div className="space-y-1">
@@ -723,13 +731,12 @@ function ThreadListPanel({ onSelect, onCollapse }: { onSelect: (handle: string) 
             </div>
           )
         ) : list.isLoading ? (
-          <p className="py-6 text-center text-xs text-slate-400 dark:text-slate-500">Loading...</p>
+          <p className="py-6 text-center text-xs text-slate-400 dark:text-slate-500">{t("Loading...")}</p>
         ) : list.threads.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-2 py-8 text-center">
             <MessageCircle className="h-7 w-7 text-slate-300 dark:text-slate-600" />
             <p className="text-xs text-slate-400 dark:text-slate-500">
-              No conversations yet. Search for an account above, or tap someone&apos;s name on a post or comment to
-              message them.
+              {t("No conversations yet. Search for an account above, or tap someone's name on a post or comment to message them.")}
             </p>
           </div>
         ) : (
@@ -762,6 +769,7 @@ function ThreadListPanel({ onSelect, onCollapse }: { onSelect: (handle: string) 
 // instead of floating freely. Shows the thread list by default, or the open conversation
 // once one is picked (from the list, or via a "Message" action elsewhere in the app).
 function DesktopChatDock() {
+  const t = useTranslate();
   const { activeHandle, openChatWith, closeChat, isDockOpen, openDock, collapseDock } = useChat();
   const [hasUnread, setHasUnread] = useState(false);
 
@@ -783,8 +791,8 @@ function DesktopChatDock() {
       <button
         type="button"
         onClick={openDock}
-        aria-label="Open private chat"
-        title="Private chat"
+        aria-label={t("Open private chat")}
+        title={t("Private chat")}
         className={`fixed right-0 top-1/2 z-40 -translate-y-1/2 flex items-center gap-1 rounded-l-2xl border border-r-0 border-slate-200 bg-white py-3 pl-3 pr-2 shadow-lg transition-all duration-200 hover:pl-4 dark:border-slate-800 dark:bg-slate-900 ${
           isDockOpen ? "pointer-events-none translate-x-full opacity-0" : "translate-x-0 opacity-100"
         }`}

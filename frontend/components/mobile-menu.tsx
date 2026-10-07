@@ -7,6 +7,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { communitiesApi, type Community } from "@/lib/api";
 import { formatMemberCount } from "@/lib/format";
+import { useLanguage, useTranslate } from "@/lib/language";
 
 const TRENDING_LIMIT = 5;
 
@@ -21,6 +22,7 @@ function CommunityRow({
   c: Community;
   onNavigate: () => void;
 }) {
+  const language = useLanguage();
   return (
     <Link
       href={`/c/${c.slug}`}
@@ -34,7 +36,7 @@ function CommunityRow({
           {c.isOwner && <Crown className="h-3 w-3 shrink-0 text-amber-500" />}
         </span>
         <span className="block truncate text-xs text-slate-400 dark:text-slate-500">
-          {formatMemberCount(c.memberCount)}
+          {formatMemberCount(c.memberCount, language)}
         </span>
       </span>
     </Link>
@@ -44,6 +46,7 @@ function CommunityRow({
 const subscribe = () => () => {};
 
 export function MobileMenu({ handle }: { handle: string | null }) {
+  const t = useTranslate();
   const pathname = usePathname();
   // Close automatically on navigation: the sheet is only "open" while the path it was
   // opened on is still current, so a Link click doesn't need a pathname effect to
@@ -83,7 +86,7 @@ export function MobileMenu({ handle }: { handle: string | null }) {
       <button
         type="button"
         onClick={() => setOpenPath(pathname)}
-        aria-label="Open menu"
+        aria-label={t("Open menu")}
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-cyan-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-cyan-400 lg:hidden"
       >
         <Menu className="h-5 w-5" />
@@ -95,19 +98,19 @@ export function MobileMenu({ handle }: { handle: string | null }) {
           <div className="fixed inset-0 z-[60] lg:hidden">
             <button
               type="button"
-              aria-label="Close menu"
+              aria-label={t("Close menu")}
               onClick={() => setOpenPath(null)}
               className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"
             />
             <div className="relative flex h-full w-64 max-w-[65%] flex-col overflow-y-auto border-r border-slate-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-950">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  Menu
+                  {t("Menu")}
                 </span>
                 <button
                   type="button"
                   onClick={() => setOpenPath(null)}
-                  aria-label="Close menu"
+                  aria-label={t("Close menu")}
                   className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-all duration-200 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                 >
                   <X className="h-4.5 w-4.5" />
@@ -124,10 +127,10 @@ export function MobileMenu({ handle }: { handle: string | null }) {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
-                    {handle ?? "Anonymous"}
+                    {handle ?? t("Anonymous")}
                   </span>
                   <span className="block text-xs text-slate-400 dark:text-slate-500">
-                    View your posts
+                    {t("View your posts")}
                   </span>
                 </span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 dark:text-slate-600" />
@@ -136,7 +139,7 @@ export function MobileMenu({ handle }: { handle: string | null }) {
               {trending.length > 0 && (
                 <div className="mb-5">
                   <h3 className="mb-1 px-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                    Trending Communities
+                    {t("Trending Communities")}
                   </h3>
                   <div className="space-y-1">
                     {trending.slice(0, TRENDING_LIMIT).map((c) => (
@@ -152,11 +155,11 @@ export function MobileMenu({ handle }: { handle: string | null }) {
 
               <div className="mb-5">
                 <h3 className="mb-1 px-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  My Communities
+                  {t("My Communities")}
                 </h3>
                 {mine.length === 0 ? (
                   <p className="px-2 text-xs text-slate-400 dark:text-slate-500">
-                    Join a community to see it here.
+                    {t("Join a community to see it here.")}
                   </p>
                 ) : (
                   <div className="space-y-1">
@@ -176,7 +179,7 @@ export function MobileMenu({ handle }: { handle: string | null }) {
                 onClick={() => setOpenPath(null)}
                 className="mt-auto block w-full rounded-full bg-cyan-500 px-3 py-2 text-center text-xs font-semibold text-white transition-all duration-200 hover:bg-cyan-600"
               >
-                + New Community
+                {t("+ New Community")}
               </Link>
             </div>
           </div>,

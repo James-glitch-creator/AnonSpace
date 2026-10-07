@@ -6,6 +6,7 @@ const THEME_INIT_SCRIPT = `
       ? stored
       : "dark";
     document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.lang = localStorage.getItem("anonspace-language") === "my" ? "my" : "en";
   } catch (e) {}
 })();
 `;

@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { API_BASE_URL, ApiError, communitiesApi, getCurrentUser, isModerator, postsApi, type CommunityRule, type Post } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/format";
+import { useLanguage, useTranslate } from "@/lib/language";
 import { BanButton } from "./admin/ban-button";
 import { CommunityPostModerationModal } from "./community-post-moderation-modal";
 import { EditPostModal } from "./edit-post-modal";
@@ -92,6 +93,8 @@ export function PostCard({
   /** Feed cards autoplay while visible. Admin surfaces and full threads opt out. */
   autoPlayVideos?: boolean;
 }) {
+  const t = useTranslate();
+  const language = useLanguage();
   const [upvotes, setUpvotes] = useState(post.upvotes);
   const [downvotes, setDownvotes] = useState(post.downvotes);
   const [myVote, setMyVote] = useState(post.myVote);
@@ -155,7 +158,7 @@ export function PostCard({
     try {
       const result = await postsApi.toggleSave(post.id);
       setIsSaved(result.isSaved);
-      setSaveToast(result.isSaved ? "Post saved" : "Post removed from saved posts");
+      setSaveToast(result.isSaved ? t("Post saved") : t("Post removed from saved posts"));
     } catch {
       // Leave saved state as-is on failure.
     } finally {
@@ -184,7 +187,7 @@ export function PostCard({
       setIsModerationOpen(true);
       return;
     }
-    if (!window.confirm("Delete this post? This can't be undone.")) return;
+    if (!window.confirm(t("Delete this post? This can't be undone."))) return;
     setIsDeleting(true);
     try {
       await postsApi.delete(post.id);
@@ -229,13 +232,13 @@ export function PostCard({
               {post.isRepost && (
                 <span className="mr-1.5 inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
                   <Repeat2 className="h-3 w-3" />
-                  Reposted
+                  {t("Reposted")}
                 </span>
               )}
               {isPinned && (
                 <span className="mr-1.5 inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
                   <Pin className="h-3 w-3 fill-current" />
-                  Pinned
+                  {t("Pinned")}
                 </span>
               )}
               {/* "public" is the implicit default posting destination, not a real
@@ -257,7 +260,7 @@ export function PostCard({
                   &middot;{" "}
                 </>
               )}
-              {formatRelativeTime(post.createdAt)}
+              {formatRelativeTime(post.createdAt, language)}
             </p>
           </div>
         </div>
@@ -276,7 +279,7 @@ export function PostCard({
           <div className="relative shrink-0" ref={menuRef}>
             <button
               type="button"
-              aria-label="Post options"
+            aria-label={t("Post options")}
               onClick={() => setIsMenuOpen((v) => !v)}
               className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition-all duration-200 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             >
@@ -285,7 +288,7 @@ export function PostCard({
 
             {isMenuOpen && (
               <div className="absolute right-0 top-full z-10 mt-1 w-44 space-y-0.5 rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-800 dark:bg-slate-900">
-                {isOwnPost && <button type="button" onClick={() => { setIsMenuOpen(false); setIsEditing(true); }} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"><Pencil className="h-4 w-4" />Edit post</button>}
+                {isOwnPost && <button type="button" onClick={() => { setIsMenuOpen(false); setIsEditing(true); }} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"><Pencil className="h-4 w-4" />{t("Edit post")}</button>}
                 {!isOwnPost && <button
                   type="button"
                   disabled={isSaving}
@@ -296,7 +299,7 @@ export function PostCard({
                   className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
                   <Bookmark className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
-                  {isSaved ? "Saved" : "Save"}
+                  {t(isSaved ? "Saved post" : "Save")}
                 </button>}
                 {canModerate && (
                   <button
@@ -309,7 +312,7 @@ export function PostCard({
                     className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
                     {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-                    {isPinned ? "Unpin" : "Pin to highlights"}
+                    {t(isPinned ? "Unpin" : "Pin to highlights")}
                   </button>
                 )}
                 {canModerate && !isOwnPost && moderationCommunity && (
@@ -321,7 +324,7 @@ export function PostCard({
                     }}
                     className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-500/10"
                   >
-                    Moderate post
+                    {t("Moderate post")}
                   </button>
                 )}
                 {!isOwnPost && (
@@ -410,7 +413,7 @@ export function PostCard({
               )}
             </>
           ) : (
-            <p className="text-xs text-slate-400 dark:text-slate-500">Original post is no longer available.</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500">{t("Original post is no longer available.")}</p>
           )}
         </Link>
       )}
@@ -431,7 +434,7 @@ export function PostCard({
         <div className="flex items-center gap-0.5 rounded-full bg-slate-100 px-1 py-1 dark:bg-slate-800">
           <button
             type="button"
-            aria-label="Upvote"
+            aria-label={t("Upvote")}
             disabled={isVoting || isOwnPost || isMod}
             title={isMod ? "Admins can't vote" : isOwnPost ? "You can't vote on your own post" : undefined}
             onClick={() => castVote("up")}
@@ -456,7 +459,7 @@ export function PostCard({
           </span>
           <button
             type="button"
-            aria-label="Downvote"
+            aria-label={t("Downvote")}
             disabled={isVoting || isOwnPost || isMod}
             title={isMod ? "Admins can't vote" : isOwnPost ? "You can't vote on your own post" : undefined}
             onClick={() => castVote("down")}
@@ -493,13 +496,13 @@ export function PostCard({
           className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-emerald-400 dark:disabled:hover:bg-transparent"
         >
           <Repeat2 className={`h-4 w-4 ${justReposted ? "text-emerald-500" : ""}`} />
-          {justReposted ? "Reposted!" : "Repost"}
+          {t(justReposted ? "Reposted!" : "Repost")}
         </button>
         <ShareMenu postId={post.id} disabled={isMod} disabledReason="Admins can't share" />
         {onDelete && (isOwnPost || canModerate) && (
           <button
             type="button"
-            aria-label="Delete post"
+            aria-label={t("Delete post")}
             disabled={isDeleting}
             onClick={handleDelete}
             className="ml-auto flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-slate-500 transition-all duration-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
