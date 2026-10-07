@@ -27,10 +27,12 @@ final class AdminOverview
         $since = self::rangeStart($range);
         $autoBanSettings = AutoBan::settings();
 
-        // "Registered accounts" is a count of regular users, not staff - admins/superadmins
-        // aren't accounts the platform is signing people up for. A missing role still means
-        // 'user' (see Auth::requireUser and friends), and $nin matches that missing field too.
-        $regularUser = ['role' => ['$nin' => ['admin', 'superadmin']]];
+        // Include only regular users. Older accounts without a role are treated as users
+        // throughout authentication; all staff roles and unknown roles stay out of stats.
+        $regularUser = ['$or' => [
+            ['role' => 'user'],
+            ['role' => ['$exists' => false]],
+        ]];
 
         Response::ok([
             'stats' => [

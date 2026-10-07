@@ -8,6 +8,7 @@ use RuntimeException;
 final class Auth
 {
     private const COOKIE_NAME = 'anonspace_token';
+    private const SUPERADMIN_HANDLE = 'Superadmin';
 
     public static function hashPassword(string $password): string
     {
@@ -17,6 +18,22 @@ final class Auth
     public static function verifyPassword(string $password, string $hash): bool
     {
         return password_verify($password, $hash);
+    }
+
+    /** Correct accounts promoted directly in MongoDB, without changing their password. */
+    public static function normalizeSuperadminHandle(array $user): array
+    {
+        if (($user['role'] ?? 'user') !== 'superadmin' || ($user['handle'] ?? '') === self::SUPERADMIN_HANDLE) {
+            return $user;
+        }
+
+        Database::users()->updateOne(
+            ['_id' => $user['_id'], 'role' => 'superadmin'],
+            ['$set' => ['handle' => self::SUPERADMIN_HANDLE]]
+        );
+        $user['handle'] = self::SUPERADMIN_HANDLE;
+
+        return $user;
     }
 
     public static function issueSession(array $user): string
@@ -97,7 +114,7 @@ final class Auth
             return null;
         }
 
-        return (array) $user;
+        return self::normalizeSuperadminHandle((array) $user);
     }
 
     /** Strips sensitive fields and normalizes a user document for API responses. */
@@ -106,7 +123,9 @@ final class Auth
         return [
             'id' => (string) $user['_id'],
             'email' => $user['email'],
-            'handle' => $user['handle'],
+            'handle' => ($user['role'] ?? 'user') === 'superadmin'
+                ? self::SUPERADMIN_HANDLE
+                : $user['handle'],
             'fullName' => $user['fullName'] ?? null,
             'role' => $user['role'] ?? 'user',
             'createdAt' => isset($user['createdAt']) ? $user['createdAt']->toDateTime()->format(DATE_ATOM) : null,

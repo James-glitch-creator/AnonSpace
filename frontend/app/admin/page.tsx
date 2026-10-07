@@ -69,7 +69,7 @@ export default function AdminOverviewPage() {
 
   const statCards = stats
     ? [
-        { label: "Registered accounts", value: stats.accountCount.toLocaleString(), note: "across the platform" },
+        { label: "Registered accounts", value: stats.accountCount.toLocaleString(), note: "users only" },
         { label: "New signups", value: stats.newAccounts.toLocaleString(), note: rangeNote },
         { label: "New posts & comments", value: stats.newContent.toLocaleString(), note: rangeNote },
         { label: "Auto-bans", value: stats.autoBans.toLocaleString(), note: rangeNote },

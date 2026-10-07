@@ -176,7 +176,6 @@ export default function RegisterAdminPage() {
                   maxLength={6}
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                  placeholder="123456"
                   className={`${inputClass} text-center text-lg tracking-[0.5em] placeholder:tracking-normal`}
                 />
               </div>

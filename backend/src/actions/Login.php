@@ -28,8 +28,9 @@ final class Login
             Response::error('This account has been banned.', 403);
         }
 
-        Auth::issueSession((array) $user);
+        $user = Auth::normalizeSuperadminHandle((array) $user);
+        Auth::issueSession($user);
 
-        Response::ok(['user' => Auth::publicUser((array) $user)]);
+        Response::ok(['user' => Auth::publicUser($user)]);
     }
 }
