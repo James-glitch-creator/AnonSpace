@@ -58,6 +58,11 @@ final class Uploads
         return self::normalize($filesField) !== [];
     }
 
+    public static function photoCount(array $filesField): int
+    {
+        return count(self::normalize($filesField));
+    }
+
     public static function mimeFor(string $path): ?string
     {
         $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));

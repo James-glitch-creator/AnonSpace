@@ -69,6 +69,7 @@ use App\Actions\SubmitReport;
 use App\Actions\ToggleSavePost;
 use App\Actions\UnblockUser;
 use App\Actions\UpdateCommunity;
+use App\Actions\UpdatePost;
 use App\Actions\UpdateNotificationPreferences;
 use App\Actions\VerifyAdminSignupOtp;
 use App\Actions\VerifyPasswordResetOtp;
@@ -147,6 +148,7 @@ $router->add('POST', '/api/posts', fn() => CreatePost::handle(requestBody(), $_F
 $router->add('GET', '/api/posts/mine', fn() => ListMyPosts::handle($_GET));
 $router->add('GET', '/api/posts/saved', fn() => ListSavedPosts::handle($_GET));
 $router->add('GET', '/api/posts/{id}', fn($p) => GetPost::handle($p['id']));
+$router->add('POST', '/api/posts/{id}/edit', fn($p) => UpdatePost::handle($p['id'], requestBody(), $_FILES));
 $router->add('DELETE', '/api/posts/{id}', fn($p) => DeletePost::handle($p['id']));
 $router->add('POST', '/api/posts/{id}/save', fn($p) => ToggleSavePost::handle($p['id']));
 $router->add('POST', '/api/posts/{id}/vote', fn($p) => VoteContent::handle('post', $p['id'], jsonBody()));

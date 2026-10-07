@@ -292,6 +292,14 @@ export const postsApi = {
 
   get: (id: string) => request<{ success: true; post: Post }>(`/api/posts/${id}`),
 
+  update: (id: string, input: { body: string; keepPhotoUrls: string[]; photos: File[] }) => {
+    const formData = new FormData();
+    formData.append("body", input.body);
+    formData.append("keepPhotoUrls", JSON.stringify(input.keepPhotoUrls));
+    for (const photo of input.photos) formData.append("photos[]", photo);
+    return requestForm<{ success: true; post: Post }>(`/api/posts/${id}/edit`, formData);
+  },
+
   delete: (id: string) =>
     request<{ success: true; deleted: true }>(`/api/posts/${id}`, { method: "DELETE" }),
 

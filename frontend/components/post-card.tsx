@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   MessageSquare,
   MoreVertical,
+  Pencil,
   Pin,
   PinOff,
   Repeat2,
@@ -19,6 +20,7 @@ import { API_BASE_URL, ApiError, communitiesApi, getCurrentUser, isModerator, po
 import { formatRelativeTime } from "@/lib/format";
 import { BanButton } from "./admin/ban-button";
 import { CommunityPostModerationModal } from "./community-post-moderation-modal";
+import { EditPostModal } from "./edit-post-modal";
 import { PhotoCarousel } from "./photo-carousel";
 import { ReportButton } from "./report-button";
 import { RepostModal } from "./repost-modal";
@@ -105,6 +107,8 @@ export function PostCard({
   const [isPinning, setIsPinning] = useState(false);
   const [pinError, setPinError] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedPost, setEditedPost] = useState<Post | null>(null);
   const [isReposting, setIsReposting] = useState(false);
   const [justReposted, setJustReposted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -142,7 +146,8 @@ export function PostCard({
   }, [isMenuOpen]);
 
   // Cheap to compute unconditionally - only actually rendered when `truncate` is set.
-  const preview = previewBody(post.body);
+  const displayedPost = editedPost ?? post;
+  const preview = previewBody(displayedPost.body);
 
   async function toggleSave() {
     if (isSaving) return;
@@ -261,13 +266,13 @@ export function PostCard({
           <BanButton
             targetType="post"
             targetId={post.id}
-            targetLabel={post.body}
+            targetLabel={displayedPost.body}
             variant="icon"
             onBanned={() => onBanned?.(post.id)}
           />
         )}
 
-        {!isMod && (!isOwnPost || canModerate) && (
+        {!isMod && (
           <div className="relative shrink-0" ref={menuRef}>
             <button
               type="button"
@@ -280,7 +285,8 @@ export function PostCard({
 
             {isMenuOpen && (
               <div className="absolute right-0 top-full z-10 mt-1 w-44 space-y-0.5 rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-800 dark:bg-slate-900">
-                <button
+                {isOwnPost && <button type="button" onClick={() => { setIsMenuOpen(false); setIsEditing(true); }} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"><Pencil className="h-4 w-4" />Edit post</button>}
+                {!isOwnPost && <button
                   type="button"
                   disabled={isSaving}
                   onClick={() => {
@@ -291,7 +297,7 @@ export function PostCard({
                 >
                   <Bookmark className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
                   {isSaved ? "Saved" : "Save"}
-                </button>
+                </button>}
                 {canModerate && (
                   <button
                     type="button"
@@ -322,7 +328,7 @@ export function PostCard({
                   <ReportButton
                     targetType="post"
                     targetId={post.id}
-                    targetLabel={post.body}
+                    targetLabel={displayedPost.body}
                     variant="menu-item"
                     onReported={() => setIsMenuOpen(false)}
                   />
@@ -355,7 +361,7 @@ export function PostCard({
         </Link>
       ) : (
         <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700 [overflow-wrap:anywhere] dark:text-slate-300">
-          {post.body}
+          {displayedPost.body}
         </p>
       )}
 
@@ -409,8 +415,8 @@ export function PostCard({
         </Link>
       )}
 
-      {post.mediaType === "photos" && post.mediaUrls.length > 0 && (
-        <PhotoCarousel urls={post.mediaUrls} />
+      {displayedPost.mediaType === "photos" && displayedPost.mediaUrls.length > 0 && (
+        <PhotoCarousel key={displayedPost.mediaUrls.join("|")} urls={displayedPost.mediaUrls} />
       )}
 
       {post.mediaType === "video" && post.videoUrl && (
@@ -513,6 +519,8 @@ export function PostCard({
           }}
         />
       )}
+
+      {isEditing && <EditPostModal post={displayedPost} onClose={() => setIsEditing(false)} onSaved={(updated) => { setEditedPost(updated); setIsEditing(false); }} />}
 
       {isModerationOpen && moderationCommunity && (
         <CommunityPostModerationModal
